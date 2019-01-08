@@ -1,0 +1,42 @@
+import os
+
+from aleph import logger
+from aleph.base import CollectorBase
+
+class FileCollector(CollectorBase):
+
+    required_options = ['path']
+
+    def validate_options(self):
+
+        super(FileCollector, self).validate_options()
+
+        path = self.options.get('path')
+
+        if not os.access(path, os.R_OK):
+            try:
+                os.mkdir(path)
+                logger.info("Directory %s created" % path)
+            except OSError as e:
+                raise OSError("Unable to create sample storage dir at %s: %s" % (path, str(e)))
+
+    def collect(self):
+        try:
+            path = self.options.get('path')
+            for dirname, dirnames, filenames in os.walk(path):
+                for filename in filenames:
+                    filepath = os.path.join(dirname, filename)
+                    if os.path.getsize(filepath) > 0:
+                        logger.info("Collecting file %s from %s" % (filepath, path))
+                        with open(filepath, 'rb') as f:
+                            data = f.read()
+                            metadata = {
+                                'filename': [filename],
+                            }
+                            logger.debug("Storing %s in relay folder" % filepath)
+                            self.store(data, metadata=metadata)
+                            logger.debug("Cleaning up file %s" % filepath)
+                            os.remove(filepath)
+
+        except Exception as e:
+            pass

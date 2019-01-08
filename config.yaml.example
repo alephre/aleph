@@ -1,0 +1,17 @@
+transport: 'amqp://localhost:5672'
+event_timezone: 'UTC'
+
+relay_folder: '/opt/aleph/triage'
+
+collectors:
+    file:
+        path: '/opt/aleph/samples'
+
+storages:
+    local:
+        path: '/opt/aleph/storage'
+
+datastores:
+    elasticsearch:
+        host: 'localhost'
+        port: 9200
