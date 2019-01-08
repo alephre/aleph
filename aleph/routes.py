@@ -12,13 +12,15 @@ task_queues = (
     Queue('plugins.linux', exchange=plugins, routing_key='plugins.linux'),
     Queue('plugins.macos', exchange=plugins, routing_key='plugins.macos'),
     Queue('plugins.sandbox', exchange=plugins, routing_key='plugins.sandbox'),
+    Queue('manager'),
+    Queue('store'),
     )
 # Celery Routing
 task_routes = ([
     ('aleph.collectors.tasks.collect', {'queue': 'collector'}),
     ('aleph.collectors.tasks.ingest', {'queue': 'collector'}),
-    ('aleph.storages.tasks.store', {'queue': 'storer'}),
-    ('aleph.datastores.tasks.store', {'queue': 'storer'}),
+    ('aleph.storages.tasks.store', {'queue': 'store'}),
+    ('aleph.datastores.tasks.store', {'queue': 'store'}),
     ('aleph.tasks.process', {'queue': 'manager'}),
     ('aleph.tasks.run_plugin', {'exchange': plugins}),
 ],)
