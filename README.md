@@ -51,6 +51,7 @@ In the distributed configuration, you can run any combination of workers and que
 - plugins.macos: Plugins that require running external MachO tools are routed to this queue. Only workers running on MacOS platforms should consume this queue.
 - plugins.sandbox: Plugins that perform actions that take a long time to run such as sandbox send/recieve are routed to this queue to avoid hogging the pipeline.
 
+### Running
 
     $  celery -A aleph worker -Q collector -n worker1@%h
     $  celery -A aleph worker -Q manager,store -n worker2@%h
