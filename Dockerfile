@@ -2,9 +2,15 @@ FROM python:3.5-slim
 MAINTAINER Jan Seidl <jseidl@wroot.org>
 
 ENV INSTALL_PATH /aleph
+ENV USER aleph
+
 RUN mkdir -p $INSTALL_PATH
+RUN useradd -ms /bin/bash $USER
 
 WORKDIR $INSTALL_PATH
+
+RUN chown -R $USER:$USER $INSTALL_PATH
+RUN chmod 755 $INSTALL_PATH
 
 RUN apt-get -qq update
 RUN apt-get -qq install python3-dev build-essential
@@ -12,9 +18,9 @@ RUN apt-get -qq install python3-dev build-essential
 COPY requirements.txt requirements.txt
 RUN pip3 install -r requirements.txt
 
-COPY aleph/ aleph/
-COPY config.yaml.docker config.yaml
+COPY aleph/ $INSTALL_PATH/aleph
+COPY config.yaml.docker $INSTALL_PATH/config.yaml
 
 ENV FOLDER_PATH /opt/aleph
 RUN mkdir -p $FOLDER_PATH/storage
-RUN mkdir -p $FOLDER_PATH/relay
+RUN chown -R $USER:$USER $FOLDER_PATH
