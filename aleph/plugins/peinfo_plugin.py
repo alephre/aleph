@@ -1,7 +1,6 @@
 import pefile
 import datetime
 
-from aleph import logger
 from aleph.base import PluginBase
 
 class PEInfoPlugin(PluginBase):

@@ -1,7 +1,8 @@
 import os
 import json
+import logging
 
-from aleph import settings, logger
+from aleph import settings
 from aleph.utils import ConfigManager, hash_data, encode_data, decode_data, get_filetype
 
 class PluginBase(object):
@@ -19,16 +20,25 @@ class PluginBase(object):
     mimetypes_exclude = []
 
     engine = None
+    logger = None
 
     document_meta = {}
 
-    def __init__(self, options = None):
+    def __init__(self, options = None, logger=None):
 
         super(PluginBase, self).__init__()
 
+        # Configure Logger
+        if not logger:
+            self.logger = logging.getLogger(__name__)
+        else:
+            self.logger = logger
+
+        # Auto-resolve name if not set
         if not self.name:
             self.name = self.__class__.__name__.lower()[:-6]
 
+        # Configure Options
         if not options:
             if settings.has_option('plugins'):
                 self.options = ConfigManager(config=settings.get('plugins'), section_name = self.name)
@@ -45,7 +55,7 @@ class PluginBase(object):
             self.validate_options()
             self.setup()
         except Exception as e:
-            logger.error('Error starting plugin %s: %s' % (self.__class__.__name__, str(e)))
+            self.logger.error('Error starting plugin %s: %s' % (self.__class__.__name__, str(e)))
 
     def validate_options(self):
         for option in self.required_options:
@@ -71,14 +81,23 @@ class DatastoreBase(object):
     required_options = []
 
     engine = None
+    logger = None
 
-    def __init__(self, options = None):
+    def __init__(self, options = None, logger = None):
 
         super(DatastoreBase, self).__init__()
 
+        # Configure Logger
+        if not logger:
+            self.logger = logging.getLogger(__name__)
+        else:
+            self.logger = logger
+
+        # Auto-resolve name if not set
         if not self.name:
             self.name = self.__class__.__name__.lower()[:-9]
 
+        # Configure options
         if not options:
             if settings.has_option('datastores'):
                 self.options = ConfigManager(config=settings.get('datastores'), section_name = self.name)
@@ -95,7 +114,7 @@ class DatastoreBase(object):
             self.validate_options()
             self.setup()
         except Exception as e:
-            logger.error('Error starting datastore handler %s: %s' % (self.__class__.__name__, str(e)))
+            self.logger.error('Error starting datastore handler %s: %s' % (self.__class__.__name__, str(e)))
 
     def validate_options(self):
         for option in self.required_options:
@@ -122,13 +141,23 @@ class StorageBase(object):
     default_options = {}
     required_options = []
 
-    def __init__(self, options = None):
+    logger = None
+
+    def __init__(self, options = None, logger = None):
 
         super(StorageBase, self).__init__()
 
+        # Configure Logger
+        if not logger:
+            self.logger = logging.getLogger(__name__)
+        else:
+            self.logger = logger
+
+        # Auto-resolve name if not set
         if not self.name:
             self.name = self.__class__.__name__.lower()[:-9]
 
+        # Configure options
         if not options:
             if settings.has_option('stroages'):
                 self.options = ConfigManager(config=settings.get('storages'), section_name = self.name)
@@ -145,7 +174,7 @@ class StorageBase(object):
             self.validate_options()
             self.setup()
         except Exception as e:
-            logger.error('Error starting storage handler %s: %s' % (self.__class__.__name__, str(e)))
+            self.logger.error('Error starting storage handler %s: %s' % (self.__class__.__name__, str(e)))
 
     def validate_options(self):
         for option in self.required_options:
@@ -175,13 +204,23 @@ class CollectorBase(object):
     default_options = {}
     required_options = []
 
-    def __init__(self, options = None):
+    logger = None
+
+    def __init__(self, options = None, logger = None):
 
         super(CollectorBase, self).__init__()
 
+        # Configure Logger
+        if not logger:
+            self.logger = logging.getLogger(__name__)
+        else:
+            self.logger = logger
+
+        # Auto-resolve name if not set
         if not self.name:
             self.name = self.__class__.__name__.lower()[:-9]
-
+        
+        # Configure options
         if not options:
             if settings.has_option('stroages'):
                 self.options = ConfigManager(config=settings.get('storages'), section_name = self.name)
@@ -198,7 +237,7 @@ class CollectorBase(object):
             self.validate_options()
             self.setup()
         except Exception as e:
-            logger.error('Error starting collector %s: %s' % (self.__class__.__name__, str(e)))
+            self.logger.error('Error starting collector %s: %s' % (self.__class__.__name__, str(e)))
 
     def validate_options(self):
         for option in self.required_options:
@@ -223,12 +262,12 @@ class CollectorBase(object):
         file_path = os.path.join(root_path, '%s.sample' % sample_id)
         metadata_path = os.path.join(root_path, '%s.json' % sample_id)
 
-        logger.debug("Storing local data for %s" % sample_id)
+        self.logger.debug("Storing local data for %s" % sample_id)
         with open(file_path, 'wb') as f_out:
             f_out.write(data)
-        logger.debug("Data for %s stored at %s" % (sample_id, file_path))
+        self.logger.debug("Data for %s stored at %s" % (sample_id, file_path))
 
-        logger.debug("Storing metadata for %s" % sample_id)
+        self.logger.debug("Storing metadata for %s" % sample_id)
         with open(metadata_path, 'w') as m_out:
             m_out.write(json.dumps(metadata))
-        logger.debug("Metadata for %s stored at %s" % (sample_id, metadata_path))
+        self.logger.debug("Metadata for %s stored at %s" % (sample_id, metadata_path))

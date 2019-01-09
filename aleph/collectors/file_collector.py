@@ -1,6 +1,5 @@
 import os
 
-from aleph import logger
 from aleph.base import CollectorBase
 
 class FileCollector(CollectorBase):
@@ -16,7 +15,7 @@ class FileCollector(CollectorBase):
         if not os.access(path, os.R_OK):
             try:
                 os.mkdir(path)
-                logger.info("Directory %s created" % path)
+                self.logger.info("Directory %s created" % path)
             except OSError as e:
                 raise OSError("Unable to create sample storage dir at %s: %s" % (path, str(e)))
 
@@ -27,15 +26,15 @@ class FileCollector(CollectorBase):
                 for filename in filenames:
                     filepath = os.path.join(dirname, filename)
                     if os.path.getsize(filepath) > 0:
-                        logger.info("Collecting file %s from %s" % (filepath, path))
+                        self.logger.info("Collecting file %s from %s" % (filepath, path))
                         with open(filepath, 'rb') as f:
                             data = f.read()
                             metadata = {
                                 'filename': [filename],
                             }
-                            logger.debug("Storing %s in relay folder" % filepath)
+                            self.logger.debug("Storing %s in relay folder" % filepath)
                             self.store(data, metadata=metadata)
-                            logger.debug("Cleaning up file %s" % filepath)
+                            self.logger.debug("Cleaning up file %s" % filepath)
                             os.remove(filepath)
 
         except Exception as e:

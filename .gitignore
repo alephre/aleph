@@ -1,4 +1,4 @@
-logs.log
+aleph.log
 config.yaml
 celerybeat-schedule.db
 celerybeat.pid

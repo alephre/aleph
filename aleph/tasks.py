@@ -1,5 +1,9 @@
-from aleph import app, logger
+from celery.utils.log import get_task_logger
+
+from aleph import app
 from aleph.utils import load_plugin, import_submodules, decode_data
+
+logger = get_task_logger(__name__)
 
 @app.task
 def process(sample_id, sample_data, mimetype):

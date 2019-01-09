@@ -1,5 +1,4 @@
 transport: 'amqp://localhost:5672'
-event_timezone: 'UTC'
 
 relay_folder: '/opt/aleph/triage'
 
@@ -15,3 +14,6 @@ datastores:
     elasticsearch:
         host: 'localhost'
         port: 9200
+
+logging:
+    path: 'aleph.log'

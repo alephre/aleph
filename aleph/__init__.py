@@ -9,10 +9,6 @@ from aleph import routes
 from aleph.constants import DEFAULT_OPTIONS
 from aleph.utils import ConfigManager
 
-# Logger
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
 # Celery app creation
 app = Celery('aleph')
 
@@ -22,12 +18,13 @@ settings.load('config.yaml')
 
 # Load Config
 app.config_from_object(routes)
-app.conf.timezone = settings.get('event_timezone')
-app.conf.broker_url = settings.get('transport')
-# Broker persistance
-app.conf.broker_transport_options = {'confirm_publish': True}
-app.conf.task_acks_late = True
-app.conf.task_reject_on_worker_lost = True
+
+app.conf.update({
+    'broker_url': settings.get('transport'),
+    'broker_transport_options': {'confirm_publish': True},
+    'task_acks_late': True,
+    'task_reject_on_worker_lost': True,
+    })
 
 # Autodiscover tasks
 app.autodiscover_tasks([
@@ -40,9 +37,19 @@ app.autodiscover_tasks([
 
 @after_setup_logger.connect
 def setup_loggers(logger, *args, **kwargs):
-    formatter = logging.Formatter('%(asctime)s %(name)s %(funcName)10s() %(levelname)s: %(message)s')
 
-    # FileHandler
-    fh = logging.FileHandler('logs.log')
-    fh.setFormatter(formatter)
-    logger.addHandler(fh)
+    if not settings.has_option('logging'):
+        return False
+
+    log_options = settings.get('logging')
+
+    if 'format' not in log_options:
+        log_options['format'] = '%(asctime)s %(name)s %(funcName)10s() %(levelname)s: %(message)s'
+
+    formatter = logging.Formatter(log_options['format'])
+
+    if 'path' in log_options:
+        # FileHandler
+        fh = logging.FileHandler(log_options['path'])
+        fh.setFormatter(formatter)
+        logger.addHandler(fh)

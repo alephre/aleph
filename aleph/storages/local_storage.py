@@ -1,6 +1,5 @@
 import os
 
-from aleph import logger
 from aleph.base import StorageBase
 
 class LocalStorage(StorageBase):
@@ -16,7 +15,7 @@ class LocalStorage(StorageBase):
         if not os.access(path, os.R_OK):
             try:
                 os.mkdir(path)
-                logger.info("Directory %s created" % path)
+                self.logger.info("Directory %s created" % path)
             except OSError as e:
                 raise OSError("Unable to create storage directory at %s: %s" % (path, str(e)))
 
@@ -28,7 +27,7 @@ class LocalStorage(StorageBase):
                 data = f.read()
             return self.encode(data)
         except Exception as e:
-            logger.error("Error retrieving sample %s: %s" % (sample_id, str(e)))
+            self.logger.error("Error retrieving sample %s: %s" % (sample_id, str(e)))
             return None
 
     def store(self, sample_id, data):
@@ -40,5 +39,5 @@ class LocalStorage(StorageBase):
                 f.write(binary_data)
             return True
         except Exception as e:
-            logger.error("Error storing sample %s: %s" % (sample_id, str(e)))
+            self.logger.error("Error storing sample %s: %s" % (sample_id, str(e)))
             return False
