@@ -30,7 +30,8 @@ def process(sample_id, sample_data, mimetype):
             logger.debug("Dispatching %s to plugin %s" % (sample_id, plugin_name))
             run_plugin.apply_async((short_name, sample_id, sample_data), routing_key='plugins.%s' % p.category)
     except Exception as e:
-        raise self.retry(exc=e)
+        logger.error('Error dispatching plugins for %s: %s' % (sample_id, str(e)))
+        self.retry(exc=e)
 
 @app.task
 def run_plugin(plugin_name, sample_id, sample_data):
@@ -53,9 +54,10 @@ def run_plugin(plugin_name, sample_id, sample_data):
             metadata['tags'] = plugin.document_meta['tags']
 
         # Send metadata to datastore
-        logger.debug("Sending %s plugin metadata for sample %s to datastores" % (plugin_name, sample_id))
+        logger.debug("Sending %s plugin metadata for sample %s to datastores" % (plugin.name, sample_id))
         app.send_task('aleph.datastores.tasks.store', args=[sample_id, metadata])
     except Exception as e:
-        raise self.retry(exc=e)
+        logger.error('Error running plugin %s: %s' % (plugin.namme, str(e)))
+        self.retry(exc=e)
 
-    logger.debug("Execution completed for %s plugin" % plugin_name)
+    logger.debug("Execution completed for %s plugin" % plugin.name)
