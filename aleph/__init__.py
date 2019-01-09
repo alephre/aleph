@@ -3,7 +3,7 @@
 import logging
 
 from celery import Celery
-from celery.signals import after_setup_logger
+from celery.signals import after_setup_logger, celeryd_after_setup
 
 from aleph import routes
 from aleph.constants import DEFAULT_OPTIONS
@@ -53,3 +53,7 @@ def setup_loggers(logger, *args, **kwargs):
         fh = logging.FileHandler(log_options['path'])
         fh.setFormatter(formatter)
         logger.addHandler(fh)
+
+@celeryd_after_setup.connect
+def capture_worker_name(sender, instance, **kwargs):
+    settings.set('worker_name', '{0}'.format(sender))

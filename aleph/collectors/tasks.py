@@ -48,8 +48,13 @@ def ingest():
         app.send_task('aleph.datastores.tasks.store', args=[sample_id, metadata])
         logger.debug("Sample %s sent to datastore" % sample_id)
 
-        # Send to processing pipeline
-        app.send_task('aleph.tasks.process', args=[sample_id, safe_data, metadata['mimetype']])
+        # Prepare and send to processing pipeline
+        sample = {
+            'id': sample_id,
+            'data': safe_data,
+            'metadata': metadata,
+        }
+        app.send_task('aleph.tasks.process', args=[sample])
         logger.debug("Sample %s sent to processing pipeline" % sample_id)
 
         # Cleanup

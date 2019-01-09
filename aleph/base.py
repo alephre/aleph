@@ -67,12 +67,13 @@ class PluginBase(object):
         except Exception as e:
             self.logger.error('Error starting plugin %s: %s' % (self.__class__.__name__, str(e)))
 
-    def can_act(self, mimetype):
+    def can_act(self, sample):
 
         if not self.options.get('enabled'):
             return False
 
         # Check for mimetype-specific plugins
+        mimetype = sample['metadata']['mimetype']
         if len(self.mimetypes) > 0:
             if not mimetype in self.mimetypes:
                 return False

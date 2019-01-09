@@ -1,5 +1,6 @@
 import os
 
+from aleph import settings
 from aleph.base import CollectorBase
 
 class FileCollector(CollectorBase):
@@ -28,10 +29,17 @@ class FileCollector(CollectorBase):
                     if os.path.getsize(filepath) > 0:
                         self.logger.info("Collecting file %s from %s" % (filepath, path))
                         with open(filepath, 'rb') as f:
+
                             data = f.read()
                             metadata = {
-                                'filename': [filename],
+                                'filename': [ filename ],
+                                'source': [{ 
+                                    'worker': settings.get('worker_name'), 
+                                    'collector': self.name, 
+                                    'path': filepath 
+                                    }]
                             }
+
                             self.logger.debug("Storing %s in relay folder" % filepath)
                             self.store(data, metadata=metadata)
                             self.logger.debug("Cleaning up file %s" % filepath)

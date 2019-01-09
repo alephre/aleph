@@ -5,7 +5,9 @@ from aleph.base import PluginBase
 
 class HashPlugin(PluginBase):
 
-    def process(self, sample_data):
+    def process(self, sample):
+
+        sample_data = sample['data']
 
         hashes = {
             'md5': hashlib.md5(sample_data).hexdigest(),

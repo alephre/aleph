@@ -56,9 +56,9 @@ class VirusTotalPlugin(PluginBase):
 
         raise RuntimeError("Maximum retries waiting for scan result for %s" % file_hash)
 
-    def process(self, sample_data):
+    def process(self, sample):
 
-        file_hash = hash_data(sample_data)
+        file_hash = hash_data(sample['data'])
 
         report = self.get(file_hash)
 
@@ -68,7 +68,7 @@ class VirusTotalPlugin(PluginBase):
                 return {'scan_id': 'not found'}
 
             self.logger.info('Sending %s to VirusTotal' % file_hash)
-            report = self.scan(sample_data)
+            report = self.scan(sample['data'])
 
         detections = []
 

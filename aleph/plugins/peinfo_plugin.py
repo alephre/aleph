@@ -9,7 +9,7 @@ class PEInfoPlugin(PluginBase):
     default_options = { 'enabled': True }
     mimetypes = ['application/x-dosexec']
 
-    def process(self, sample_data):
+    def process(self, sample):
         """Get Portable Executable (PE) files data
 
         Return example:
@@ -31,7 +31,7 @@ class PEInfoPlugin(PluginBase):
         tags = []
 
         try:
-            pe = pefile.PE(data=sample_data, fast_load=True)
+            pe = pefile.PE(data=sample['data'], fast_load=True)
             pe.parse_data_directories( directories=[ 
                 pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_IMPORT'],
                 pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_EXPORT'],
