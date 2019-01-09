@@ -20,5 +20,6 @@ def store(sample_id, metadata):
             datastore.store(sample_id, metadata)
             logger.debug("Metadata for %s stored on datastore" % sample_id)
         except Exception as e:
-            logger.error("Error storing metadata for %s on datastore: %s" % (sample_id, str(e)))
+            raise self.retry(exc=e)
+
         logger.debug("Datastore storage routine finished")

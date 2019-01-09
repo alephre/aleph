@@ -21,5 +21,6 @@ def store(sample_id, sample_data, enqueue=True):
             storage.store(sample_id, sample_data)
             logger.debug("Sample %s stored to %s storage" % (sample_id, name))
         except Exception as e:
-            logger.error("Error storing %s to %s storage" % (sample_id, name))
+            raise self.retry(exc=e)
+
     logger.debug("Storage routine finished")
