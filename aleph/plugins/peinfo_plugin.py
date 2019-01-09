@@ -119,5 +119,4 @@ class PEInfoPlugin(PluginBase):
             return data
                             
         except Exception as e:
-            logger.error('Cannot parse sample Not PE?: %s' % str(e))
-            raise
+            raise 
