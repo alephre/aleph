@@ -1,0 +1,72 @@
+version: '2'
+services:
+    elasticsearch:
+        image: 'docker.elastic.co/elasticsearch/elasticsearch-oss:6.3.0'
+        environment:
+            - bootstrap.memory_lock=true
+            - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+        ulimits:
+            memlock:
+                soft: -1
+                hard: -1
+        ports:
+            - '9200:9200'
+
+    rabbitmq:
+        image: 'rabbitmq:3-alpine'
+
+    aleph_base:
+        build: .
+
+    aleph_collector:
+        extends: aleph_base
+        command: celery worker -l info -A aleph -c 1 -Q collector
+        links:
+            - elasticsearch
+            - rabbitmq
+        depends_on:
+            - elasticsearch
+            - rabbitmq
+        volumes:
+            - ./samples:/opt/aleph/samples
+
+    aleph_worker:
+        extends: aleph_base
+        command: celery worker -l info -A aleph -c 2 -Q manager,store
+        links:
+            - elasticsearch
+            - rabbitmq
+        depends_on:
+            - elasticsearch
+            - rabbitmq
+
+    aleph_plugins_generic:
+        extends: aleph_base
+        command: celery worker -l info -A aleph -c 5 -Q plugins.generic
+        links:
+            - elasticsearch
+            - rabbitmq
+        depends_on:
+            - elasticsearch
+            - rabbitmq
+
+    aleph_plugins_sandbox:
+        extends: aleph_base
+        command: celery worker -l info -A aleph -c 2 -Q plugins.sandbox
+        links:
+            - elasticsearch
+            - rabbitmq
+        depends_on:
+            - elasticsearch
+            - rabbitmq
+    
+    aleph_beat:
+        extends: aleph_base
+        command: celery beat -A aleph
+        links:
+            - elasticsearch
+            - rabbitmq
+        depends_on:
+            - elasticsearch
+            - rabbitmq
+            - aleph_collector

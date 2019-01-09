@@ -1,0 +1,25 @@
+transport: 'amqp://rabbitmq:5672'
+event_timezone: 'UTC'
+
+relay_folder: '/opt/aleph/relay'
+
+collectors:
+    file:
+        path: '/opt/aleph/samples'
+
+storages:
+    local:
+        path: '/opt/aleph/storage'
+
+datastores:
+    elasticsearch:
+        host: 'elasticsearch'
+        port: 9200
+
+plugins:
+    virustotal:
+        enabled: true
+        api_key: '6111e23bb2a0cfb3178a2921fea7e71c4e6e28a969fc3adf91f83eb4a38a2006'
+
+logging:
+    path: 'aleph.log'

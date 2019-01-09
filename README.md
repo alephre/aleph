@@ -75,4 +75,14 @@ So far it is configured to pipe log entries to both stdout and *aleph.log*. If y
 
     $ celery worker -A aleph -B -l debug
 
+# Using Docker
 
+The docker-compose.yml will spawn both rabbitmq and elasticsearch dockers, alongside the 4 aleph machines with the same worker configuration as in the "Distributed" example.
+
+Create a `samples` folder in the same folder of the Dockerfile and call `docker-compose up` to bring them up to speed.
+
+**THE INDEX ON ELASTICSEARCH MUST BE CREATED ON DOCKER**
+
+    $ curl -X PUT http://IP:9200/aleph
+
+Don't worry, aleph will keep retrying to connect until you create the index ;)

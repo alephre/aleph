@@ -8,7 +8,6 @@ future==0.17.1
 idna==2.8
 kombu==4.2.2.post1
 pefile==2018.8.8
-pkg-resources==0.0.0
 python-magic==0.4.15
 pytz==2018.7
 PyYAML==3.13
