@@ -26,15 +26,25 @@ def process(sample_id, sample_data, mimetype):
 
 @app.task
 def run_plugin(plugin_name, sample_id, sample_data):
+
     logger.debug("Received sample %s for plugin %s" % (sample_id, plugin_name))
-    # Run plugin & get extracted data
+
     logger.debug("Loading %s plugin" % plugin_name)
     plugin = load_plugin(plugin_name)()
-    logger.debug("Running %s plugin" % plugin_name)
+
     binary_data = decode_data(sample_data)
+
+    logger.debug("Running %s plugin" % plugin_name)
     result = plugin.process(binary_data)
-    # Send metadata to datastore
+
     metadata = {plugin.name: result}
+
+    # Add tags to main document metadata
+    if 'tags' in plugin.document_meta:
+        metadata['tags'] = plugin.document_meta['tags']
+
+    # Send metadata to datastore
     logger.debug("Sending %s plugin metadata for sample %s to datastores" % (plugin_name, sample_id))
     app.send_task('aleph.datastores.tasks.store', args=[sample_id, metadata])
+
     logger.debug("Execution completed for %s plugin" % plugin_name)
