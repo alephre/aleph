@@ -20,6 +20,8 @@ services:
 
     rabbitmq:
         image: 'rabbitmq:3-alpine'
+        ports:
+            - '5672:5672'
 
     aleph_base:
         user: aleph
@@ -27,7 +29,7 @@ services:
 
     aleph_collector:
         extends: aleph_base
-        command: celery worker -l info -A aleph -c 1 -Q collector
+        command: celery worker -l info -A aleph -c 1 -Q collector -n collector@%h
         links:
             - elasticsearch
             - rabbitmq
@@ -39,7 +41,7 @@ services:
 
     aleph_worker:
         extends: aleph_base
-        command: celery worker -l info -A aleph -c 2 -Q manager,store
+        command: celery worker -l info -A aleph -c 2 -Q manager,store -n worker@%h
         links:
             - elasticsearch
             - rabbitmq
@@ -49,7 +51,7 @@ services:
 
     aleph_plugins_generic:
         extends: aleph_base
-        command: celery worker -l info -A aleph -c 5 -Q plugins.generic
+        command: celery worker -l info -A aleph -c 5 -Q plugins.generic -n plugins_generic@%h
         links:
             - elasticsearch
             - rabbitmq
@@ -59,7 +61,7 @@ services:
 
     aleph_plugins_sandbox:
         extends: aleph_base
-        command: celery worker -l info -A aleph -c 2 -Q plugins.sandbox
+        command: celery worker -l info -A aleph -c 2 -Q plugins.sandbox -n plugins_sandbox@%h
         links:
             - elasticsearch
             - rabbitmq
