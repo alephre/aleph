@@ -8,8 +8,8 @@ import magic
 from hashlib import sha256
 from base64 import b64encode, b64decode
 
-def hash_data(data):
-    hasher = sha256()
+def hash_data(data, algo=sha256):
+    hasher = algo()
     hasher.update(data)
     return hasher.hexdigest()
 
@@ -40,7 +40,9 @@ class ConfigManager(object):
         return self.config
 
     def get(self, option):
-        return self.base()[option]
+        if self.has_option(option):
+            return self.base()[option]
+        return None
 
     def set(self, option, value):
         self.base()[option] = value
@@ -88,19 +90,27 @@ def load_datastore(name):
 def load_plugin(name):
     return load_component(name, 'plugins', 'plugin')
 
+def list_submodules(package_name, namesOnly=False): 
+    """ Lists all submodules of a module, recursively
+    :param package_name: Package name
+    :type package_name: str
+    :rtype: list[str]
+    """
+    package = sys.modules[package_name]
+    return pkgutil.walk_packages(package.__path__)
+
 def import_submodules(package_name):
     """ Import all submodules of a module, recursively
     :param package_name: Package name
     :type package_name: str
     :rtype: dict[types.ModuleType]
     """
-    package = sys.modules[package_name]
 
     try:
         return {
             name: importlib.import_module(package_name + '.' + name)
-            for loader, name, is_pkg in pkgutil.walk_packages(package.__path__)
-        }
+            for loader, name, is_pkg in list_submodules(package_name)
+            }
     except ImportError as ex:
         raise
 
@@ -111,3 +121,5 @@ def get_filetype(data):
         magic.from_buffer(data),
     )
 
+def in_string(tokens, string):
+    return any(token in str(string).lower() for token in tokens)  

@@ -24,7 +24,7 @@ class PluginBase(object):
 
     document_meta = {}
 
-    def __init__(self, options = None, logger=None):
+    def __init__(self, options = None, logger=None, dry=False):
 
         super(PluginBase, self).__init__()
 
@@ -40,27 +40,54 @@ class PluginBase(object):
 
         # Configure Options
         if not options:
+            config = {}
             if settings.has_option('plugins'):
-                self.options = ConfigManager(config=settings.get('plugins'), section_name = self.name)
-            else:
-                self.options = ConfigManager()
+                plugins_settings = settings.get('plugins')
+                if plugins_settings and self.name in plugins_settings.keys():
+                    config = plugins_settings[self.name]
         else:
-            self.options = ConfigManager(config=options)
+            config = options
+
+        self.options = ConfigManager(config=config)
 
         for option, value in self.default_options.items():
             if not self.options.has_option(option):
                 self.options.set(option, value)
 
+        self.logger.debug("Plugin %s configured: %s" % (self.name, self.options.dump()))
+
+        # Dry run, do not setup nor validate
+        if dry:
+            return 
+
         try:
             self.validate_options()
             self.setup()
+            self.logger.debug("Plugin %s completely initialized" % self.name)
         except Exception as e:
             self.logger.error('Error starting plugin %s: %s' % (self.__class__.__name__, str(e)))
+
+    def can_act(self, mimetype):
+
+        if not self.options.get('enabled'):
+            return False
+
+        # Check for mimetype-specific plugins
+        if len(self.mimetypes) > 0:
+            if not mimetype in self.mimetypes:
+                return False
+
+        if len(self.mimetypes_exclude) > 0:
+            if mimetype in p.mimetypes_exclude:
+                return False
+
+        return True
 
     def validate_options(self):
         for option in self.required_options:
             if not self.options.has_option(option):
                 raise KeyError('Required option "%s" not defined for %s plugin' % (option, self.name))
+
     def add_tag(self, tag):
         if not 'tags' in self.document_meta:
             self.document_meta['tags'] = []

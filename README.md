@@ -34,7 +34,7 @@ The example config file uses a local collector and local file storage. Please se
 ## Standalone
 To run aleph in a single worker, use the following celery command
 
-    $ celery worker -A aleph -B
+    $ celery worker -A aleph -B -c 1
     
 ## Distributed
 In the distributed configuration, you can run any combination of workers and queues you want. Just bind the worker to a queue with _-Q queue_ option. 
@@ -53,7 +53,7 @@ In the distributed configuration, you can run any combination of workers and que
 
 ### Running
 
-    $  celery worker -A aleph -Q collector -n worker1@%h
+    $  celery worker -A aleph -Q collector -n worker1@%h -c 1
     $  celery worker -A aleph -Q manager,store -n worker2@%h
     $  celery worker -A aleph -Q plugins.generic -n worker3@%h  
     $  celery worker -A aleph -Q plugins.sandbox -n worker4@%h  
@@ -61,6 +61,12 @@ In the distributed configuration, you can run any combination of workers and que
     $  celery -A aleph beat # Scheduler
 
 And that should have you up and running
+
+## Concurrency / Number of concurrent workers
+
+Each `celery` command can run under multiple forked() processes by using the `-c N` parameter.
+
+**DO NOT RUN MORE THAN 1 WORKER (-c 1) FOR COLLECTORS OR GOD WILL MURDER ALL FIRSTBORNS**
 
 ## Logging
 So far it is configured to pipe log entries to both stdout and *aleph.log*. If you want to suppress file-logging, just omit the *path* directive in the *logging* section of the config file. Also all logger calls are doing *debug* entries, which we must fix (promote some of them to INFO). Error logging is a @TODO as well.
