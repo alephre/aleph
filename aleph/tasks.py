@@ -11,10 +11,14 @@ def process(sample_id, sample_data, mimetype):
 
         short_name = plugin_name.split('_')[0]
         class_name = ''.join([word.capitalize() for word in plugin_name.split('_')])
-        p = getattr(plugin, class_name)
+        p = load_plugin(short_name)
 
-        if len(p.act_on) > 0:
-            if not mimetype in p.act_on:
+        # Check for mimetype-specific plugins
+        if len(p.mimetypes) > 0:
+            if not mimetype in p.mimetypes:
+                continue
+        if len(p.mimetypes_exclude) > 0:
+            if mimetype in p.mimetypes_exclude:
                 continue
 
         logger.debug("Dispatching %s to plugin %s" % (sample_id, plugin_name))
@@ -30,7 +34,7 @@ def run_plugin(plugin_name, sample_id, sample_data):
     binary_data = decode_data(sample_data)
     result = plugin.process(binary_data)
     # Send metadata to datastore
-    metadata = {plugin_name: result}
+    metadata = {plugin.name: result}
     logger.debug("Sending %s plugin metadata for sample %s to datastores" % (plugin_name, sample_id))
     app.send_task('aleph.datastores.tasks.store', args=[sample_id, metadata])
     logger.debug("Execution completed for %s plugin" % plugin_name)

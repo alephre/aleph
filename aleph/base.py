@@ -14,9 +14,13 @@ class PluginBase(object):
         'enabled': True,
     }
     required_options = []
-    act_on = []
+
+    mimetypes = []
+    mimetypes_exclude = []
 
     engine = None
+
+    document_meta = {}
 
     def __init__(self, options = None):
 
@@ -47,7 +51,11 @@ class PluginBase(object):
         for option in self.required_options:
             if not self.options.has_option(option):
                 raise KeyError('Required option "%s" not defined for %s plugin' % (option, self.name))
-
+    def add_tag(self, tag):
+        if not 'tags' in self.document_meta:
+            self.document_meta['tags'] = []
+        self.document_meta['tags'].append(tag)
+    
     def setup(self):
         pass
 
