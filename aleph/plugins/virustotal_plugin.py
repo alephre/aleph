@@ -81,7 +81,7 @@ class VirusTotalPlugin(PluginBase):
                     'result': res['result'],
                 })
 
-        if len(detections) > 1:
+        if report['positives'] > 0:
             self.add_tag('malware')
 
         return {

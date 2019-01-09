@@ -1,12 +1,33 @@
 from celery.utils.log import get_task_logger
 
 from aleph import app, settings
-from aleph.utils import load_plugin, list_submodules, decode_data
+from aleph.utils import load_plugin, list_submodules, decode_data, hash_data, get_filetype
 
 logger = get_task_logger(__name__)
 
 @app.task(autoretry_for=(Exception,), retry_backoff=True)
-def process(sample):
+def process(sample_data, metadata):
+
+    # Grab additional metadata
+    binary_data = decode_data(sample_data)
+    sample_id = hash_data(binary_data)
+    metadata['mimetype'], metadata['mimetype_str'] = get_filetype(binary_data)
+    metadata['size'] = len(binary_data)
+
+    # Store sample
+    app.send_task('aleph.storages.tasks.store', args=[sample_id, sample_data])
+    logger.debug("Sample %s sent to storage" % sample_id)
+
+    # Create datastore entry
+    app.send_task('aleph.datastores.tasks.store', args=[sample_id, metadata])
+    logger.debug("Sample %s sent to datastore" % sample_id)
+
+    # Prepare and send to processing pipeline
+    sample = {
+        'id': sample_id,
+        'data': sample_data,
+        'metadata': metadata,
+    }
 
     logger.debug('Dispatching %s to suitable plugins' % sample['id'])
 
@@ -37,7 +58,8 @@ def run_plugin(plugin_name, sample):
     logger.debug("Running %s plugin" % plugin_name)
     result = plugin.process(sample)
 
-    metadata = {plugin.name: result}
+    metadata = {}
+    metadata['artifacts'] = {plugin.name: result}
 
     # Add tags to main document metadata
     if 'tags' in plugin.document_meta:

@@ -28,6 +28,5 @@ task_routes = ([
 # Celery Beat
 beat_schedule = {
     'collectors-broadcast-collect': { 'task': 'aleph.collectors.tasks.collect', 'schedule': 10.0, },
-    'collectors-broadcast-ingest': { 'task': 'aleph.collectors.tasks.ingest', 'schedule': 10.0, },
 }
 

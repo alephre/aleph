@@ -2,8 +2,8 @@ import os
 import json
 import logging
 
-from aleph import settings
-from aleph.utils import ConfigManager, hash_data, encode_data, decode_data, get_filetype
+from aleph import app, settings
+from aleph.utils import ConfigManager, encode_data, decode_data
 
 class PluginBase(object):
 
@@ -54,6 +54,8 @@ class PluginBase(object):
             if not self.options.has_option(option):
                 self.options.set(option, value)
 
+        self.document_meta = {}
+
         self.logger.debug("Plugin %s configured: %s" % (self.name, self.options.dump()))
 
         # Dry run, do not setup nor validate
@@ -79,7 +81,7 @@ class PluginBase(object):
                 return False
 
         if len(self.mimetypes_exclude) > 0:
-            if mimetype in p.mimetypes_exclude:
+            if mimetype in self.mimetypes_exclude:
                 return False
 
         return True
@@ -278,24 +280,7 @@ class CollectorBase(object):
     def collect(self):
         raise NotImplementedError('Collection routine not implemented on %s collector' % self.name)
 
-    def store(self, data, metadata={}):
+    def dispatch(self, data, metadata={}):
        
-        sample_id = hash_data(data)
-
-        metadata['mimetype'], metadata['mimetype_str'] = get_filetype(data)
-        metadata['size'] = len(data)
-
-        root_path = settings.get('relay_folder')
-
-        file_path = os.path.join(root_path, '%s.sample' % sample_id)
-        metadata_path = os.path.join(root_path, '%s.json' % sample_id)
-
-        self.logger.debug("Storing local data for %s" % sample_id)
-        with open(file_path, 'wb') as f_out:
-            f_out.write(data)
-        self.logger.debug("Data for %s stored at %s" % (sample_id, file_path))
-
-        self.logger.debug("Storing metadata for %s" % sample_id)
-        with open(metadata_path, 'w') as m_out:
-            m_out.write(json.dumps(metadata))
-        self.logger.debug("Metadata for %s stored at %s" % (sample_id, metadata_path))
+        safe_data = encode_data(data)
+        app.send_task('aleph.tasks.process', args=[safe_data, metadata])

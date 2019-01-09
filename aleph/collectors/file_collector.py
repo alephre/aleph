@@ -40,8 +40,8 @@ class FileCollector(CollectorBase):
                                     }]
                             }
 
-                            self.logger.debug("Storing %s in relay folder" % filepath)
-                            self.store(data, metadata=metadata)
+                            self.logger.debug("Inserting sample %s into the pipeline" % filepath)
+                            self.dispatch(data, metadata=metadata)
                             self.logger.debug("Cleaning up file %s" % filepath)
                             os.remove(filepath)
 
