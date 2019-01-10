@@ -1,16 +1,14 @@
 transport: 'amqp://localhost:5672'
 
-relay_folder: '/opt/aleph/triage'
-
-collectors:
+collector:
     file:
         path: '/opt/aleph/samples'
 
-storages:
+storage:
     local:
         path: '/opt/aleph/storage'
 
-datastores:
+datastore:
     elasticsearch:
         host: 'localhost'
         port: 9200

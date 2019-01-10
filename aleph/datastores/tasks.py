@@ -5,7 +5,7 @@ from aleph.loader import load_datastore
 
 logger = get_task_logger(__name__)
 
-DATASTORES = [(name, load_datastore(name)(options)) for name, options in settings.get('datastores').items()]
+DATASTORES = [(name, load_datastore(name)(options)) for name, options in settings.get('datastore').items()]
 
 @app.task(autoretry_for=(Exception,), retry_backoff=True)
 def update_task_states():

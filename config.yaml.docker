@@ -1,20 +1,19 @@
 transport: 'amqp://rabbitmq:5672'
-event_timezone: 'UTC'
 
-collectors:
+collector:
     file:
         path: '/opt/aleph/samples'
 
-storages:
+storage:
     local:
         path: '/opt/aleph/storage'
 
-datastores:
+datastore:
     elasticsearch:
         host: 'elasticsearch'
         port: 9200
 
-plugins:
+plugin:
     virustotal:
         enabled: true
         api_key: '6111e23bb2a0cfb3178a2921fea7e71c4e6e28a969fc3adf91f83eb4a38a2006'

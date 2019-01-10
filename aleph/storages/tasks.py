@@ -7,7 +7,7 @@ from aleph.loader import load_storage
 
 logger = get_task_logger(__name__)
 
-STORAGES = [(name, load_storage(name)(options)) for name, options in settings.get('storages').items()]
+STORAGES = [(name, load_storage(name)(options)) for name, options in settings.get('storage').items()]
 
 @app.task(autoretry_for=(Exception,), retry_backoff=True)
 def store(sample_id, sample_data, enqueue=True):

@@ -23,8 +23,9 @@ class ElasticsearchDatastore(DatastoreBase):
 
     def retrieve(self, sample_id):
         self.logger.debug("Retrieving metadata for %s" % sample_id)
-        #@IMPLEMENTME @jseidl need to do a search for matching hash
+        result = self.engine.get(index=self.options.get('index'), doc_type=self.options.get('doctype'), id=sample_id)['_source']
         self.logger.debug("Metadata retrieved for %s" % sample_id)
+        return result
 
     def store(self, sample_id, document):
 
@@ -107,8 +108,6 @@ class ElasticsearchDatastore(DatastoreBase):
                     "params": params
                 },
             }
-
-            print(document_body)
 
             self._update(sample_id, document_body)
 

@@ -6,28 +6,21 @@ from aleph import app, settings
 from aleph.config import ConfigManager
 from aleph.utils import encode_data, decode_data
 
-class PluginBase(object):
+class ComponentBase(object):
 
     name = None
-
     options = {}
-    category = 'generic'
-    default_options = {
-        'enabled': True,
-    }
+    default_options = {}
     required_options = []
-
-    mimetypes = []
-    mimetypes_exclude = []
-
-    engine = None
     logger = None
+    component_type = None
 
-    document_meta = {}
+    def __init__(self, options = None, logger = None, dry=False):
 
-    def __init__(self, options = None, logger=None, dry=False):
+        super(ComponentBase, self).__init__()
 
-        super(PluginBase, self).__init__()
+        if not self.component_type:
+            raise NotImplementedError('component_type is undefined')
 
         # Configure Logger
         if not logger:
@@ -37,15 +30,15 @@ class PluginBase(object):
 
         # Auto-resolve name if not set
         if not self.name:
-            self.name = self.__class__.__name__.lower()[:-6]
+            self.name = self.__class__.__name__.lower().replace(self.component_type.lower(), '')
 
         # Configure Options
         if not options:
             config = {}
-            if settings.has_option('plugins'):
-                plugins_settings = settings.get('plugins')
-                if plugins_settings and self.name in plugins_settings.keys():
-                    config = plugins_settings[self.name]
+            if settings.has_option(self.component_type):
+                component_settings = settings.get(self.component_type)
+                if component_settings and self.name in component_settings.keys():
+                    config = component_settings[self.name]
         else:
             config = options
 
@@ -55,20 +48,41 @@ class PluginBase(object):
             if not self.options.has_option(option):
                 self.options.set(option, value)
 
-        self.document_meta = {}
-
-        self.logger.debug("Plugin %s configured: %s" % (self.name, self.options.dump()))
-
         # Dry run, do not setup nor validate
         if dry:
             return 
 
         try:
             self.validate_options()
+            self.init()
             self.setup()
-            self.logger.debug("Plugin %s completely initialized" % self.name)
         except Exception as e:
-            self.logger.error('Error starting plugin %s: %s' % (self.__class__.__name__, str(e)))
+            self.logger.error('Error starting component %s: %s' % (self.__class__.__name__, str(e)))
+
+    def validate_options(self):
+        for option in self.required_options:
+            if not self.options.has_option(option):
+                raise KeyError('Required option "%s" not defined for %s handler' % (option, self.name))
+
+    def setup(self):
+        pass
+
+    def init(self):
+        pass
+
+class PluginBase(ComponentBase):
+
+    component_type = 'plugin'
+
+    category = 'generic'
+    default_options = {
+        'enabled': True,
+    }
+
+    mimetypes = []
+    mimetypes_exclude = []
+
+    document_meta = {}
 
     def can_act(self, sample):
 
@@ -87,73 +101,22 @@ class PluginBase(object):
 
         return True
 
-    def validate_options(self):
-        for option in self.required_options:
-            if not self.options.has_option(option):
-                raise KeyError('Required option "%s" not defined for %s plugin' % (option, self.name))
-
     def add_tag(self, tag):
         if not 'tags' in self.document_meta:
             self.document_meta['tags'] = []
         self.document_meta['tags'].append(tag)
     
-    def setup(self):
-        pass
+    def init(self):
+
+        self.document_meta = {}
 
     def process(self, sample_data):
         raise NotImplementedError('Process routine not implemented on %s plugin' % self.name)
 
-class DatastoreBase(object):
+class DatastoreBase(ComponentBase):
 
-    name = None
-
-    options = {}
-    default_options = {}
-    required_options = []
-
+    component_type = 'datastore'
     engine = None
-    logger = None
-
-    def __init__(self, options = None, logger = None):
-
-        super(DatastoreBase, self).__init__()
-
-        # Configure Logger
-        if not logger:
-            self.logger = logging.getLogger(__name__)
-        else:
-            self.logger = logger
-
-        # Auto-resolve name if not set
-        if not self.name:
-            self.name = self.__class__.__name__.lower()[:-9]
-
-        # Configure options
-        if not options:
-            if settings.has_option('datastores'):
-                self.options = ConfigManager(config=settings.get('datastores'), section_name = self.name)
-            else:
-                self.options = ConfigManager()
-        else:
-            self.options = ConfigManager(config=options)
-
-        for option, value in self.default_options.items():
-            if not self.options.has_option(option):
-                self.options.set(option, value)
-
-        try:
-            self.validate_options()
-            self.setup()
-        except Exception as e:
-            self.logger.error('Error starting datastore handler %s: %s' % (self.__class__.__name__, str(e)))
-
-    def validate_options(self):
-        for option in self.required_options:
-            if not self.options.has_option(option):
-                raise KeyError('Required option "%s" not defined for %s datastore handler' % (option, self.name))
-
-    def setup(self):
-        pass
 
     def update_task_states(self):
         raise NotImplementedError('Update task states routine not implemented on %s datastore handler' % self.name)
@@ -167,53 +130,9 @@ class DatastoreBase(object):
     def update(self, sample_id, document):
         raise NotImplementedError('Store routine not implemented on %s datastore handler' % self.name)
 
-class StorageBase(object):
+class StorageBase(ComponentBase):
 
-    name = None
-
-    options = {}
-    default_options = {}
-    required_options = []
-
-    logger = None
-
-    def __init__(self, options = None, logger = None):
-
-        super(StorageBase, self).__init__()
-
-        # Configure Logger
-        if not logger:
-            self.logger = logging.getLogger(__name__)
-        else:
-            self.logger = logger
-
-        # Auto-resolve name if not set
-        if not self.name:
-            self.name = self.__class__.__name__.lower()[:-9]
-
-        # Configure options
-        if not options:
-            if settings.has_option('stroages'):
-                self.options = ConfigManager(config=settings.get('storages'), section_name = self.name)
-            else:
-                self.options = ConfigManager()
-        else:
-            self.options = ConfigManager(config=options)
-
-        for option, value in self.default_options.items():
-            if not self.options.has_option(option):
-                self.options.set(option, value)
-
-        try:
-            self.validate_options()
-            self.setup()
-        except Exception as e:
-            self.logger.error('Error starting storage handler %s: %s' % (self.__class__.__name__, str(e)))
-
-    def validate_options(self):
-        for option in self.required_options:
-            if not self.options.has_option(option):
-                raise KeyError('Required option "%s" not defined for %s storage handler' % (option, self.name))
+    component_type = 'storage'
 
     def encode(self, data):
         return encode_data(data)
@@ -230,56 +149,9 @@ class StorageBase(object):
     def store(self, sample_id, data):
         raise NotImplementedError('Store routine not implemented on %s storage handler' % self.name)
 
-class CollectorBase(object):
+class CollectorBase(ComponentBase):
 
-    name = None
-
-    options = {}
-    default_options = {}
-    required_options = []
-
-    logger = None
-
-    def __init__(self, options = None, logger = None):
-
-        super(CollectorBase, self).__init__()
-
-        # Configure Logger
-        if not logger:
-            self.logger = logging.getLogger(__name__)
-        else:
-            self.logger = logger
-
-        # Auto-resolve name if not set
-        if not self.name:
-            self.name = self.__class__.__name__.lower()[:-9]
-        
-        # Configure options
-        if not options:
-            if settings.has_option('stroages'):
-                self.options = ConfigManager(config=settings.get('storages'), section_name = self.name)
-            else:
-                self.options = ConfigManager()
-        else:
-            self.options = ConfigManager(config=options)
-
-        for option, value in self.default_options.items():
-            if not self.options.has_option(option):
-                self.options.set(option, value)
-
-        try:
-            self.validate_options()
-            self.setup()
-        except Exception as e:
-            self.logger.error('Error starting collector %s: %s' % (self.__class__.__name__, str(e)))
-
-    def validate_options(self):
-        for option in self.required_options:
-            if not self.options.has_option(option):
-                raise KeyError('Required option "%s" not defined for %s collector' % (option, self.name))
-
-    def setup(self):
-        pass
+    component_type = 'collector'
 
     def collect(self):
         raise NotImplementedError('Collection routine not implemented on %s collector' % self.name)

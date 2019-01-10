@@ -6,7 +6,6 @@ from celery import Celery
 from celery.signals import after_setup_logger, celeryd_after_setup
 
 from aleph import routes
-from aleph.constants import DEFAULT_OPTIONS
 from aleph.config import ConfigManager
 
 # Celery app creation
@@ -22,6 +21,7 @@ app.config_from_object(routes)
 app.conf.update({
     'broker_url': settings.get('transport'),
     'broker_transport_options': {'confirm_publish': True},
+    'event_timezone': 'UTC',
     'task_acks_late': True,
     'task_reject_on_worker_lost': True,
     })
