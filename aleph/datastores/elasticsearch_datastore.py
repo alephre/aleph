@@ -52,15 +52,49 @@ class ElasticsearchDatastore(DatastoreBase):
                 }
             }
 
-        self.update(sample_id, document_body)
+        self._update(sample_id, document_body)
 
         # Add list elements one by one
         for key, values in option_lists.items():
-            self.update_array(sample_id, key, values)
+            self._update_array(sample_id, key, values)
 
         self.logger.debug("Metadata for %s stored on datastore" % sample_id)
 
-    def update_array(self, sample_id, array_name, values):
+    def update_task_states(self):
+
+        body = {
+            "query": {
+                "bool" : {
+                    "filter" : [
+                        {"script" : {"script" : {"source": "doc['plugins_completed'].containsAll(doc['plugins_dispatched'])", "lang": "painless"}}},
+                        {"script" : {"script" : {"source": "!doc['tags'].contains('scan_completed')", "lang": "painless"}}}
+                    ]
+                }
+            },
+            "stored_fields": []
+        }
+
+        result = self._search(body)['hits']
+
+        if not result['total']:
+            self.logger.debug('No untagged complete tasks')
+            return True
+            
+        for entry in result['hits']:
+            sample_id = entry['_id'] 
+            self.logger.debug("Tagging sample %s as 'scan_completed'" % sample_id)
+            self._update_array(sample_id, 'tags', ['scan_completed'])
+
+    def _search(self, body):
+
+        result = self.engine.search(
+            index=self.options.get('index'),
+            doc_type=self.options.get('doctype'), body=body
+            )
+
+        return result
+
+    def _update_array(self, sample_id, array_name, values):
 
             params = {}
             params[array_name] = values
@@ -76,9 +110,9 @@ class ElasticsearchDatastore(DatastoreBase):
 
             print(document_body)
 
-            self.update(sample_id, document_body)
+            self._update(sample_id, document_body)
 
-    def update(self, sample_id, document_body):
+    def _update(self, sample_id, document_body):
 
         self.engine.update(
             id=sample_id,

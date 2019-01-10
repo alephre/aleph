@@ -154,6 +154,9 @@ class DatastoreBase(object):
     def setup(self):
         pass
 
+    def update_task_states(self):
+        raise NotImplementedError('Update task states routine not implemented on %s datastore handler' % self.name)
+
     def retrieve(self, sample_id):
         raise NotImplementedError('Retrieve routine not implemented on %s datastore handler' % self.name)
 

@@ -21,6 +21,7 @@ task_routes = ([
     ('aleph.collectors.tasks.ingest', {'queue': 'collector'}),
     ('aleph.storages.tasks.store', {'queue': 'store'}),
     ('aleph.datastores.tasks.store', {'queue': 'store'}),
+    ('aleph.datastores.tasks.update_task_states', {'queue': 'store'}),
     ('aleph.tasks.process', {'queue': 'manager'}),
     ('aleph.tasks.run_plugin', {'exchange': plugins}),
 ],)
@@ -28,5 +29,6 @@ task_routes = ([
 # Celery Beat
 beat_schedule = {
     'collectors-broadcast-collect': { 'task': 'aleph.collectors.tasks.collect', 'schedule': 10.0, },
+    'collectors-broadcast-collect': { 'task': 'aleph.datastores.tasks.update_task_states', 'schedule': 10.0, },
 }
 

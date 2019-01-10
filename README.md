@@ -28,6 +28,14 @@ Then clone git repo to same folder and copy over the sample config
 ## Install python dependencies
     $ pip3 install -r requirements.txt
 
+# Creating the index
+The index must be created on ES and the aleph mapping applied to the index. This must be done prior to running Aleph. Aleph won't try to create any indexes nor configure ES.
+
+The example below creates and applies the mapping(assuming ES is on localhost):
+
+    $ curl -X PUT http://localhost:9200/aleph
+    $ curl -X PUT http://localhost:9200/aleph/_mapping/sample -d @mapping.json --header 'Content-Type: application/json'
+
 # Running
 The example config file uses a local collector and local file storage. Please set the appropriate paths before launching Aleph
 
@@ -81,8 +89,3 @@ The docker-compose.yml will spawn both rabbitmq and elasticsearch dockers, along
 
 Create a `samples` folder in the same folder of the Dockerfile and call `docker-compose up` to bring them up to speed.
 
-**THE INDEX ON ELASTICSEARCH MUST BE CREATED ON DOCKER**
-
-    $ curl -X PUT http://IP:9200/aleph
-
-Don't worry, aleph will keep retrying to connect until you create the index ;)
