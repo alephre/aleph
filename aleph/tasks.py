@@ -18,10 +18,6 @@ def process(sample_data, metadata):
     app.send_task('aleph.storages.tasks.store', args=[sample_id, sample_data])
     logger.debug("Sample %s sent to storage" % sample_id)
 
-    # Create datastore entry
-    app.send_task('aleph.datastores.tasks.store', args=[sample_id, metadata])
-    logger.debug("Sample %s sent to datastore" % sample_id)
-
     # Prepare and send to processing pipeline
     sample = {
         'id': sample_id,
@@ -32,6 +28,8 @@ def process(sample_data, metadata):
     logger.debug('Dispatching %s to suitable plugins' % sample['id'])
 
     plugins = list_submodules('aleph.plugins', namesOnly=True)
+
+    plugins_dispatched = []
 
     for loader, name, is_pkg in plugins:
 
@@ -44,6 +42,15 @@ def process(sample_data, metadata):
         routing_key = 'plugins.%s' % plugin.category
         logger.debug("Dispatching %s to plugin %s" % (sample['id'], plugin_name))
         run_plugin.apply_async((plugin_name, sample), routing_key=routing_key)
+
+        plugins_dispatched.append(plugin.name)
+
+    # Track dispatched plugins
+    metadata['plugins_dispatched'] = plugins_dispatched
+
+    # Create datastore entry
+    app.send_task('aleph.datastores.tasks.store', args=[sample['id'], metadata])
+    logger.debug("Sample %s sent to datastore" % sample_id)
 
 @app.task(autoretry_for=(Exception,), retry_backoff=True)
 def run_plugin(plugin_name, sample):
@@ -64,6 +71,9 @@ def run_plugin(plugin_name, sample):
     # Add tags to main document metadata
     if 'tags' in plugin.document_meta:
         metadata['tags'] = plugin.document_meta['tags']
+
+    # Add current plugin to metadata
+    metadata['plugins_completed'] = [plugin.name,]
 
     # Send metadata to datastore
     logger.debug("Sending %s plugin metadata for sample %s to datastores" % (plugin.name, sample['id']))

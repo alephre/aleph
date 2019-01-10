@@ -29,10 +29,60 @@ class ElasticsearchDatastore(DatastoreBase):
     def store(self, sample_id, document):
 
         self.logger.debug("Storing sample %s on datastore" % sample_id)
+
+        option_lists = {}
+        treated_document = {}
+
+        # Remove list entries from main document
+        for key, values in document.items():
+            if key is 'artifacts':
+                continue
+            if type(values) in [list, tuple]:
+                option_lists[key] = document[key]
+            else:
+                treated_document[key] = document[key]
+
+        document_body = {
+            'doc': treated_document,
+            'upsert': {
+                'tags': [],
+                'sources': [],
+                'plugins_dispatched': [],
+                'plugins_completed': [],
+                }
+            }
+
+        self.update(sample_id, document_body)
+
+        # Add list elements one by one
+        for key, values in option_lists.items():
+            self.update_array(sample_id, key, values)
+
+        self.logger.debug("Metadata for %s stored on datastore" % sample_id)
+
+    def update_array(self, sample_id, array_name, values):
+
+            params = {}
+            params[array_name] = values
+
+            document_body = {
+                "scripted_upsert": True,
+                "script": {
+                    "source": "ctx._source.%s.addAll(params.%s)" % (array_name, array_name),
+                    "lang": "painless",
+                    "params": params
+                },
+            }
+
+            print(document_body)
+
+            self.update(sample_id, document_body)
+
+    def update(self, sample_id, document_body):
+
         self.engine.update(
             id=sample_id,
             index=self.options.get('index'), 
             doc_type=self.options.get('doctype'),
-            body={'doc': document, 'doc_as_upsert': True}
+            body=document_body
             )
-        self.logger.debug("Sample %s stored on datastore" % sample_id)

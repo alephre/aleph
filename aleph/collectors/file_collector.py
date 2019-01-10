@@ -1,5 +1,7 @@
 import os
 
+from time import time
+
 from aleph import settings
 from aleph.base import CollectorBase
 
@@ -26,14 +28,21 @@ class FileCollector(CollectorBase):
             for dirname, dirnames, filenames in os.walk(path):
                 for filename in filenames:
                     filepath = os.path.join(dirname, filename)
-                    if os.path.getsize(filepath) > 0:
+
+                    # Validate file for collection
+                    if os.path.getsize(filepath) > 0 and os.access(filepath, os.R_OK):
+
+                        # Prevent ingesting files that are still transfering
+                        if self.options.has_option('mtime_grace') and (time() - os.stat(filepath).st_mtime) < int(self.options.get('mtime_grace')):
+                            self.logger.debug("File %s has been modified recently, prolly still transfering? Skipping until next collection round" % filepath)
+                            continue
+
                         self.logger.info("Collecting file %s from %s" % (filepath, path))
                         with open(filepath, 'rb') as f:
 
                             data = f.read()
                             metadata = {
-                                'filename': [ filename ],
-                                'source': [{ 
+                                'sources': [{ 
                                     'worker': settings.get('worker_name'), 
                                     'collector': self.name, 
                                     'path': filepath 
