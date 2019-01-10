@@ -4,7 +4,8 @@ import json
 from celery.utils.log import get_task_logger
 
 from aleph import app, settings
-from aleph.utils import load_collector, hash_data, encode_data
+from aleph.loader import load_collector
+from aleph.utils import hash_data, encode_data
 
 logger = get_task_logger(__name__)
 

@@ -1,7 +1,7 @@
 from celery.utils.log import get_task_logger
 
 from aleph import app, settings
-from aleph.utils import load_datastore
+from aleph.loader import load_datastore
 
 logger = get_task_logger(__name__)
 

@@ -3,7 +3,8 @@ import json
 import logging
 
 from aleph import app, settings
-from aleph.utils import ConfigManager, encode_data, decode_data
+from aleph.config import ConfigManager
+from aleph.utils import encode_data, decode_data
 
 class PluginBase(object):
 

@@ -7,7 +7,7 @@ from celery.signals import after_setup_logger, celeryd_after_setup
 
 from aleph import routes
 from aleph.constants import DEFAULT_OPTIONS
-from aleph.utils import ConfigManager
+from aleph.config import ConfigManager
 
 # Celery app creation
 app = Celery('aleph')
