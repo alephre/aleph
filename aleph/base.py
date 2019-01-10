@@ -2,6 +2,8 @@ import os
 import json
 import logging
 
+from datetime import datetime
+
 from aleph import app, settings
 from aleph.config import ConfigManager
 from aleph.utils import encode_data, decode_data
@@ -64,6 +66,20 @@ class ComponentBase(object):
             if not self.options.has_option(option):
                 raise KeyError('Required option "%s" not defined for %s handler' % (option, self.name))
 
+    def dispatch(self, data, metadata={}, reference=None):
+
+        metadata['timestamp'] = datetime.utcnow().timestamp()
+
+        metadata['sources'] = [{ 
+                'worker': settings.get('worker_name'), 
+                'component': self.component_type,
+                'name': self.name, 
+                'args': reference,
+            }]
+       
+        safe_data = encode_data(data)
+        app.send_task('aleph.tasks.process', args=[safe_data, metadata])
+
     def setup(self):
         pass
 
@@ -110,7 +126,7 @@ class PluginBase(ComponentBase):
 
         self.document_meta = {}
 
-    def process(self, sample_data):
+    def process(self, sample):
         raise NotImplementedError('Process routine not implemented on %s plugin' % self.name)
 
 class DatastoreBase(ComponentBase):
@@ -140,9 +156,6 @@ class StorageBase(ComponentBase):
     def decode(self, data):
         return decode_data(data)
 
-    def setup(self):
-        pass
-
     def retrieve(self, sample_id):
         raise NotImplementedError('Retrieve routine not implemented on %s storage handler' % self.name)
 
@@ -155,8 +168,3 @@ class CollectorBase(ComponentBase):
 
     def collect(self):
         raise NotImplementedError('Collection routine not implemented on %s collector' % self.name)
-
-    def dispatch(self, data, metadata={}):
-       
-        safe_data = encode_data(data)
-        app.send_task('aleph.tasks.process', args=[safe_data, metadata])

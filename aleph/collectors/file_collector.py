@@ -41,16 +41,10 @@ class FileCollector(CollectorBase):
                         with open(filepath, 'rb') as f:
 
                             data = f.read()
-                            metadata = {
-                                'sources': [{ 
-                                    'worker': settings.get('worker_name'), 
-                                    'collector': self.name, 
-                                    'path': filepath 
-                                    }]
-                            }
 
                             self.logger.debug("Inserting sample %s into the pipeline" % filepath)
-                            self.dispatch(data, metadata=metadata)
+                            self.dispatch(data, reference=filepath)
+
                             self.logger.debug("Cleaning up file %s" % filepath)
                             os.remove(filepath)
 
