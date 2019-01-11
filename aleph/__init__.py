@@ -30,7 +30,8 @@ app.conf.update({
 app.autodiscover_tasks([
     'aleph',
     'aleph.collectors',
-    'aleph.plugins',
+    'aleph.processors',
+    'aleph.analyzers',
     'aleph.datastores',
     'aleph.storages',
 ])

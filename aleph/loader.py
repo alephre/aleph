@@ -39,15 +39,19 @@ def load_storage(name):
 def load_datastore(name):
     return load_component(name, 'datastores', 'datastore')
 
-def load_plugin(name):
-    return load_component(name, 'plugins', 'plugin')
+def load_processor(name):
+    return load_component(name, 'processors', 'processor')
 
-def list_submodules(package_name, namesOnly=False): 
+def load_analyzer(name):
+    return load_component(name, 'analyzers', 'analyzer')
+
+def list_submodules(package_name): 
     """ Lists all submodules of a module, recursively
     :param package_name: Package name
     :type package_name: str
     :rtype: list[str]
     """
+    
     package = sys.modules[package_name]
     return pkgutil.walk_packages(package.__path__)
 

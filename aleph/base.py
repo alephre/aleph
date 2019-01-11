@@ -126,6 +126,10 @@ class PluginBase(ComponentBase):
 
         self.document_meta = {}
 
+class ProcessorBase(PluginBase):
+
+    component_type = 'processor'
+    
     def process(self, sample):
         raise NotImplementedError('Process routine not implemented on %s plugin' % self.name)
 

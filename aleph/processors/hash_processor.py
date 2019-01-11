@@ -1,9 +1,9 @@
 import hashlib
 import binascii
 
-from aleph.base import PluginBase
+from aleph.base import ProcessorBase
 
-class HashPlugin(PluginBase):
+class HashProcessor(ProcessorBase):
 
     def process(self, sample):
 

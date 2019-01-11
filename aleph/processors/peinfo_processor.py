@@ -1,9 +1,9 @@
 import pefile
 import datetime
 
-from aleph.base import PluginBase
+from aleph.base import ProcessorBase
 
-class PEInfoPlugin(PluginBase):
+class PEInfoProcessor(ProcessorBase):
 
     name = 'pe_info'
     default_options = { 'enabled': True }

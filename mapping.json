@@ -1,6 +1,6 @@
 {
     "properties": {
-        "plugins_completed": {
+        "processors_completed": {
             "fields": {
                 "keyword": {
                     "ignore_above": 256,
@@ -9,7 +9,7 @@
             },
             "type": "keyword"
         },
-        "plugins_dispatched": {
+        "processors_dispatched": {
             "fields": {
                 "keyword": {
                     "ignore_above": 256,
@@ -18,6 +18,25 @@
             },
                 "type": "keyword"
         },
+        "analyzers_completed": {
+            "fields": {
+                "keyword": {
+                    "ignore_above": 256,
+                    "type": "keyword"
+                }
+            },
+            "type": "keyword"
+        },
+        "analyzers_dispatched": {
+            "fields": {
+                "keyword": {
+                    "ignore_above": 256,
+                    "type": "keyword"
+                }
+            },
+                "type": "keyword"
+        },
+
         "sources": {
             "properties": {
                 "collector": {

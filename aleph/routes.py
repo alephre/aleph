@@ -23,7 +23,8 @@ task_routes = ([
     ('aleph.datastores.tasks.store', {'queue': 'store'}),
     ('aleph.datastores.tasks.update_task_states', {'queue': 'store'}),
     ('aleph.tasks.process', {'queue': 'manager'}),
-    ('aleph.tasks.run_plugin', {'exchange': plugins}),
+    ('aleph.processors.tasks.run', {'exchange': plugins}),
+    ('aleph.analyzers.tasks.run', {'exchange': plugins}),
 ],)
 
 # Celery Beat

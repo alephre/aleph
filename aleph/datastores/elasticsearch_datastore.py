@@ -48,8 +48,10 @@ class ElasticsearchDatastore(DatastoreBase):
             'upsert': {
                 'tags': [],
                 'sources': [],
-                'plugins_dispatched': [],
-                'plugins_completed': [],
+                'processors_dispatched': [],
+                'processors_completed': [],
+                'analyzers_dispatched': [],
+                'analyzers_completed': [],
                 }
             }
 
