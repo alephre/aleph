@@ -91,9 +91,7 @@ class PluginBase(ComponentBase):
     component_type = 'plugin'
 
     category = 'generic'
-    default_options = {
-        'enabled': True,
-    }
+    default_options = { 'enabled': True, }
 
     mimetypes = []
     mimetypes_exclude = []
@@ -133,9 +131,18 @@ class ProcessorBase(PluginBase):
     def process(self, sample):
         raise NotImplementedError('Process routine not implemented on %s plugin' % self.name)
 
+class AnalyzerBase(PluginBase):
+
+    component_type = 'analyzer'
+    
+    def process(self, sample):
+        raise NotImplementedError('Process routine not implemented on %s plugin' % self.name)
+
+
 class DatastoreBase(ComponentBase):
 
     component_type = 'datastore'
+    default_options = { 'enabled': False, }
     engine = None
 
     def update_task_states(self):
@@ -150,9 +157,18 @@ class DatastoreBase(ComponentBase):
     def update(self, sample_id, document):
         raise NotImplementedError('Store routine not implemented on %s datastore handler' % self.name)
 
+    def dispatch(self, sample_id, metadata):
+
+        sample = {
+            'id': sample_id,
+            'metadata': metadata,
+        }
+        app.send_task('aleph.tasks.analyze', args=[sample])
+
 class StorageBase(ComponentBase):
 
     component_type = 'storage'
+    default_options = { 'enabled': False, }
 
     def encode(self, data):
         return encode_data(data)
@@ -169,6 +185,7 @@ class StorageBase(ComponentBase):
 class CollectorBase(ComponentBase):
 
     component_type = 'collector'
+    default_options = { 'enabled': False, }
 
     def collect(self):
         raise NotImplementedError('Collection routine not implemented on %s collector' % self.name)

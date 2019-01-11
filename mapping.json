@@ -1,5 +1,8 @@
 {
     "properties": {
+        "size": { "type": "long" },
+        "mimetype": { "type": "keyword" },
+        "mimetype_str": { "type": "text" },
         "processors_completed": {
             "fields": {
                 "keyword": {

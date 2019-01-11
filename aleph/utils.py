@@ -61,9 +61,8 @@ def run_plugin(component_type, plugin_name, args):
     logger.debug("Running %s plugin" % plugin_name)
     result = plugin.process(args)
 
-    metadata = {}
-    meta_key = 'artifacts.%s' % component_type
-    metadata[meta_key] = {plugin.name: result}
+    metadata = {'artifacts': {}}
+    metadata['artifacts'][component_type] = {plugin.name: result}
 
     # Add tags to main document metadata
     if 'tags' in plugin.document_meta:

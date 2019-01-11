@@ -36,29 +36,34 @@ class ElasticsearchDatastore(DatastoreBase):
 
         # Remove list entries from main document
         for key, values in document.items():
-            if key is 'artifacts':
-                continue
-            if type(values) in [list, tuple]:
+            if type(values) in [list, tuple] and 'artifacts' not in key:
                 option_lists[key] = document[key]
             else:
                 treated_document[key] = document[key]
 
+        default_arrays = {
+            'tags': [],
+            'sources': [],
+            'processors_dispatched': [],
+            'processors_completed': [],
+            'analyzers_dispatched': [],
+            'analyzers_completed': [],
+        }
+
+        # Merge document with defaults for upsert case
+        upsert = {**default_arrays, **treated_document}
+
         document_body = {
             'doc': treated_document,
-            'upsert': {
-                'tags': [],
-                'sources': [],
-                'processors_dispatched': [],
-                'processors_completed': [],
-                'analyzers_dispatched': [],
-                'analyzers_completed': [],
-                }
+            'upsert': upsert,
             }
 
         self._update(sample_id, document_body)
 
         # Add list elements one by one
         for key, values in option_lists.items():
+            if len(values) == 0:
+                continue
             self._update_array(sample_id, key, values)
 
         self.logger.debug("Metadata for %s stored on datastore" % sample_id)
@@ -69,7 +74,7 @@ class ElasticsearchDatastore(DatastoreBase):
             "query": {
                 "bool" : {
                     "filter" : [
-                        {"script" : {"script" : {"source": "doc['plugins_completed'].containsAll(doc['plugins_dispatched'])", "lang": "painless"}}},
+                        {"script" : {"script" : {"source": "doc['processors_completed'].containsAll(doc['processors_dispatched'])", "lang": "painless"}}},
                         {"script" : {"script" : {"source": "!doc['tags'].contains('scan_completed')", "lang": "painless"}}}
                     ]
                 }
@@ -85,6 +90,7 @@ class ElasticsearchDatastore(DatastoreBase):
             
         for entry in result['hits']:
             sample_id = entry['_id'] 
+            self.dispatch(sample_id, self.retrieve(sample_id))
             self.logger.debug("Tagging sample %s as 'scan_completed'" % sample_id)
             self._update_array(sample_id, 'tags', ['scan_completed'])
 

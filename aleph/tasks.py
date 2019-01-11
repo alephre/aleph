@@ -17,6 +17,7 @@ def process(sample_data, metadata):
     # Grab additional metadata
     binary_data = decode_data(sample_data)
     sample_id = hash_data(binary_data)
+
     metadata['mimetype'], metadata['mimetype_str'] = get_filetype(binary_data)
     metadata['size'] = len(binary_data)
 
@@ -35,12 +36,15 @@ def process(sample_data, metadata):
 
 def dispatch(component_type, sample):
 
-    logger.debug('Dispatching %s to suitable %s' % (sample['id'], component_type))
+    sample_id = sample['id'] 
+
+    logger.debug('Dispatching %s to suitable %s' % (sample_id, component_type))
 
     plugins = list_submodules('aleph.%ss' % component_type)
 
     plugins_dispatched = []
-    metadata = {}
+
+    metadata = sample['metadata'] if 'data' in sample.keys() else {}
 
     for loader, name, is_pkg in plugins:
 
@@ -55,7 +59,7 @@ def dispatch(component_type, sample):
             continue
 
         routing_key = 'plugins.%s' % plugin.category
-        logger.debug("Dispatching %s to %s %s" % (sample['id'], component_type, plugin_name))
+        logger.debug("Dispatching %s to %s %s" % (sample_id, component_type, plugin_name))
         app.send_task('aleph.%ss.tasks.run' % component_type, args=[plugin_name, sample], routing_key=routing_key)
 
 
@@ -65,5 +69,5 @@ def dispatch(component_type, sample):
     metadata['%ss_dispatched' % component_type] = plugins_dispatched
 
     # Create datastore entry
-    app.send_task('aleph.datastores.tasks.store', args=[sample['id'], metadata])
-    logger.debug("Sample %s sent to datastore" % sample['id'])
+    app.send_task('aleph.datastores.tasks.store', args=[sample_id, metadata])
+    logger.debug("Sample %s sent to datastore" % sample_id)
