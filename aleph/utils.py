@@ -9,6 +9,8 @@ from aleph.loader import load_processor, load_analyzer
 
 logger = get_task_logger(__name__)
 
+PLUGIN_CACHE = {}
+
 def hash_data(data, algo=sha256):
     hasher = algo()
     hasher.update(data)
@@ -33,6 +35,12 @@ def get_filetype(data):
 
 def get_plugin(component_type, plugin_name):
 
+    module_name = '%s_%s' % (plugin_name, component_type)
+
+    if module_name in PLUGIN_CACHE:
+        logger.debug('Loading %s plugin from cache' % module_name)
+        return PLUGIN_CACHE[module_name]
+
     components = {
         'processor': load_processor,
         'analyzer': load_analyzer,
@@ -43,8 +51,11 @@ def get_plugin(component_type, plugin_name):
     if not loader:
         raise ImportError("component %s (%s) not found" % (plugin_name, component_type))
 
-    logger.debug("Loading %s plugin" % plugin_name)
-    return loader(plugin_name)
+    logger.debug('Loading %s plugin from disk' % module_name)
+
+    PLUGIN_CACHE[module_name] = loader(plugin_name)
+
+    return PLUGIN_CACHE[module_name]
 
 def run_plugin(component_type, plugin_name, args):
 

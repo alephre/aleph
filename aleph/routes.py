@@ -33,4 +33,3 @@ beat_schedule = {
     'collectors-broadcast-collect': { 'task': 'aleph.collectors.tasks.collect', 'schedule': 10.0, },
     'collectors-broadcast-update-task-states': { 'task': 'aleph.datastores.tasks.update_task_states', 'schedule': 10.0, },
 }
-

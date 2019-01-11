@@ -24,13 +24,6 @@ app.conf.update({
     'event_timezone': 'UTC',
     'task_acks_late': True,
     'task_reject_on_worker_lost': True,
-    'task_annotations': {
-        '*': {
-            'max_retries': None,
-            'retry_backoff': True,
-            'default_retry_delay': 10,
-            }
-        },
     })
 
 # Autodiscover tasks

@@ -51,7 +51,7 @@ def list_submodules(package_name):
     :type package_name: str
     :rtype: list[str]
     """
-    
+
     package = sys.modules[package_name]
     return pkgutil.walk_packages(package.__path__)
 
