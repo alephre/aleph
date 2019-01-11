@@ -1,20 +1,17 @@
 import os
 
-from celery.utils.log import get_task_logger
-
 from aleph import app, settings
 from aleph.loader import load_storage
-
-logger = get_task_logger(__name__)
+from aleph.base import TaskBase
 
 STORAGES = [(name, load_storage(name)(options)) for name, options in settings.get('storage').items()]
 
-@app.task(autoretry_for=(Exception,), retry_backoff=True)
-def store(sample_id, sample_data, enqueue=True):
+@app.task(bind=True, base=TaskBase)
+def store(self, sample_id, sample_data, enqueue=True):
 
     for name, storage in STORAGES:
-        logger.debug("Storing %s to %s storage" % (sample_id, name))
+        self.logger.info("Storing %s to %s storage" % (sample_id, name))
         storage.store(sample_id, sample_data)
-        logger.debug("Sample %s stored to %s storage" % (sample_id, name))
+        self.logger.debug("Sample %s stored to %s storage" % (sample_id, name))
 
-    logger.debug("Storage routine finished")
+    self.logger.debug("Storage routine finished")

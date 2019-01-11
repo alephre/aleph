@@ -48,7 +48,7 @@ def get_plugin(component_type, plugin_name):
 
 def run_plugin(component_type, plugin_name, args):
 
-    sample_id = args['id'] if 'id' in args.keys() else args['_id']
+    sample_id = args['id']
 
     if not sample_id:
         raise AttributeError('Sample id not defined in args')

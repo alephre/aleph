@@ -4,9 +4,25 @@ import logging
 
 from datetime import datetime
 
+from celery import Task
+from celery.utils.log import get_task_logger
+
 from aleph import app, settings
 from aleph.config import ConfigManager
 from aleph.utils import encode_data, decode_data
+
+class TaskBase(Task):
+
+    def __call__(self, *args, **kwargs):
+        self.logger = get_task_logger(__name__)
+        return self.run(*args, **kwargs)
+
+    def on_retry(self, exc, task_id, args, kwargs, einfo):
+        self.logger.warning('Task %s[%s] is being queued for retry: %s' % (self.name, task_id, einfo))
+
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
+        self.logger.error('Task %s[%s] failed: %s' % (self.name, task_id, einfo))
+        self.retry(exc=exc)
 
 class ComponentBase(object):
 

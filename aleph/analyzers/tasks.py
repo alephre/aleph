@@ -1,11 +1,10 @@
-from celery.utils.log import get_task_logger
-
 from aleph import app
 from aleph.utils import run_plugin
+from aleph.base import TaskBase
 
-logger = get_task_logger(__name__)
 
-@app.task(autoretry_for=(Exception,), retry_backoff=True)
-def run(analyzer_name, metadata):
+@app.task(bind=True, base=TaskBase)
+def run(self, analyzer_name, sample):
 
-    run_plugin('analyzer', analyzer_name, metadata)
+    self.logger.info('Applying analyzer %s on sample %s' % (analyzer_name, sample['id']))
+    run_plugin('analyzer', analyzer_name, sample)
