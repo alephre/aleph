@@ -5,7 +5,7 @@ Aleph is an open source project started in late 2014, includes contributions fro
 All names are sorted in alphabetical order.
 
 ## Project technical leads:
-* Fernando Merces   <ttps://www.mentebinaria.com.br/>
+* Fernando Merces   <https://www.mentebinaria.com.br/>
 * Jan Seidl         <https://wroot.org>
 
 ## Main Developers:
