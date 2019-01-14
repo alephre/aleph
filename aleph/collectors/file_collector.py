@@ -43,7 +43,7 @@ class FileCollector(CollectorBase):
                             data = f.read()
 
                             self.logger.debug("Inserting sample %s into the pipeline" % filepath)
-                            self.dispatch(data, reference=filepath)
+                            self.dispatch(data, filename=filename)
 
                             self.logger.debug("Cleaning up file %s" % filepath)
                             os.remove(filepath)

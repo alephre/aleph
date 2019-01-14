@@ -1,6 +1,6 @@
 from aleph import app, settings
 from aleph.loader import list_submodules
-from aleph.utils import decode_data, hash_data, get_filetype, get_plugin
+from aleph.utils import decode_data, hash_data, get_filetype, get_plugin, call_task
 from aleph.base import TaskBase
 
 @app.task(bind=True, base=TaskBase)
@@ -22,7 +22,7 @@ def process(self, sample_data, metadata):
     metadata['size'] = len(binary_data)
 
     # Store sample
-    app.send_task('aleph.storages.tasks.store', args=[sample_id, sample_data])
+    call_task('aleph.storages.tasks.store', args=[sample_id, sample_data])
     self.logger.info("Sample %s sent to storage" % sample_id)
 
     # Prepare and send to processing pipeline
@@ -57,7 +57,7 @@ def dispatch(component_type, sample):
             continue
 
         routing_key = 'plugins.%s' % plugin.category
-        app.send_task('aleph.%ss.tasks.run' % component_type, args=[plugin_name, sample], routing_key=routing_key)
+        call_task('aleph.%ss.tasks.run' % component_type, args=[plugin_name, sample], routing_key=routing_key)
 
 
         plugins_dispatched.append(plugin.name)
@@ -66,4 +66,4 @@ def dispatch(component_type, sample):
     metadata['%ss_dispatched' % component_type] = plugins_dispatched
 
     # Create datastore entry
-    app.send_task('aleph.datastores.tasks.store', args=[sample_id, metadata])
+    call_task('aleph.datastores.tasks.store', args=[sample_id, metadata])

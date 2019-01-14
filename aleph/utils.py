@@ -84,6 +84,12 @@ def run_plugin(component_type, plugin_name, args):
 
     # Send metadata to datastore
     logger.debug("Sending %s %s metadata for sample %s to datastores" % (plugin.name, component_type, sample_id))
-    app.send_task('aleph.datastores.tasks.store', args=[sample_id, metadata])
+    call_task('aleph.datastores.tasks.store', args=[sample_id, metadata])
 
     logger.debug("Execution completed for %s plugin" % plugin.name)
+
+def call_task(task_name, args, routing_key='celery'):
+    try:
+        app.send_task(task_name, args=args, routing_key=routing_key)
+    except Exception as e:
+        logger.error("Error dispatching task %s: %s" % (task_name, str(e)))

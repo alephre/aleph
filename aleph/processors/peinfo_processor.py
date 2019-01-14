@@ -6,7 +6,6 @@ from aleph.base import ProcessorBase
 class PEInfoProcessor(ProcessorBase):
 
     name = 'pe_info'
-    default_options = { 'enabled': True }
     mimetypes = ['application/x-dosexec']
 
     def process(self, sample):

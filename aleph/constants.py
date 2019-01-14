@@ -1,4 +1,11 @@
-DEFAULT_OPTIONS = {}
+CELERY_AUTODISCOVER_TASKS = [
+    'aleph',
+    'aleph.collectors',
+    'aleph.processors',
+    'aleph.analyzers',
+    'aleph.datastores',
+    'aleph.storages',
+]
 
 MIMETYPES_ARCHIVE = [
     'application/zip',

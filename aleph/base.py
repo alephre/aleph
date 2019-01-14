@@ -9,7 +9,7 @@ from celery.utils.log import get_task_logger
 
 from aleph import app, settings
 from aleph.config import ConfigManager
-from aleph.utils import encode_data, decode_data
+from aleph.utils import encode_data, decode_data, call_task
 
 class TaskBase(Task):
 
@@ -82,19 +82,21 @@ class ComponentBase(object):
             if not self.options.has_option(option):
                 raise KeyError('Required option "%s" not defined for %s handler' % (option, self.name))
 
-    def dispatch(self, data, metadata={}, reference=None):
+    def dispatch(self, data, metadata={}, filename=None, parent=None, args=None):
 
         metadata['timestamp'] = datetime.utcnow().timestamp()
 
         metadata['sources'] = [{ 
                 'worker': settings.get('worker_name'), 
-                'component': self.component_type,
-                'name': self.name, 
-                'args': reference,
+                'component_type': self.component_type,
+                'component_name': self.name, 
+                'filename': filename,
+                'parent': parent,
+                'args': args,
             }]
        
         safe_data = encode_data(data)
-        app.send_task('aleph.tasks.process', args=[safe_data, metadata])
+        call_task('aleph.tasks.process', args=[safe_data, metadata])
 
     def setup(self):
         pass
@@ -179,7 +181,7 @@ class DatastoreBase(ComponentBase):
             'id': sample_id,
             'metadata': metadata,
         }
-        app.send_task('aleph.tasks.analyze', args=[sample])
+        call_task('aleph.tasks.analyze', args=[sample])
 
 class StorageBase(ComponentBase):
 

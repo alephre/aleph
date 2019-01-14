@@ -6,6 +6,7 @@ from celery import Celery
 from celery.signals import after_setup_logger, celeryd_init
 
 from aleph import routes
+from aleph.constants import CELERY_AUTODISCOVER_TASKS
 from aleph.config import ConfigManager
 
 # Celery app creation
@@ -15,9 +16,10 @@ app = Celery('aleph')
 settings = ConfigManager()
 settings.load('config.yaml')
 
-# Load Config
+# Load Routes
 app.config_from_object(routes)
 
+# Celery Options
 app.conf.update({
     'broker_url': settings.get('transport'),
     'broker_transport_options': {'confirm_publish': True},
@@ -26,22 +28,17 @@ app.conf.update({
     'task_reject_on_worker_lost': True,
     'task_annotations': {
         '*': {
-            'max_retries': None,
+            'max_retries': None if not settings.has_option('max_retries') else settings.get('max_retries'),
             'retry_backoff': True,
-            'default_retry_delay': 10,
+            'default_retry_delay': 10 if not settings.has_option('default_retry_delay') else settings.get('default_retry_delay'),
             }
         },
     })
 
+
+
 # Autodiscover tasks
-app.autodiscover_tasks([
-    'aleph',
-    'aleph.collectors',
-    'aleph.processors',
-    'aleph.analyzers',
-    'aleph.datastores',
-    'aleph.storages',
-])
+app.autodiscover_tasks(CELERY_AUTODISCOVER_TASKS)
 
 @after_setup_logger.connect
 def setup_loggers(logger, *args, **kwargs):
