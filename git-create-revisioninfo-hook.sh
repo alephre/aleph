@@ -1,4 +1,7 @@
-#!/usr/bin/env bash
+#!/bin/sh
+#
+# Generate version.txt file on commits
+#
 
 FILENAME='version.txt'
 
