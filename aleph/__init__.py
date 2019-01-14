@@ -3,7 +3,7 @@
 import logging
 
 from celery import Celery
-from celery.signals import after_setup_logger, celeryd_after_setup
+from celery.signals import after_setup_logger, celeryd_init
 
 from aleph import routes
 from aleph.config import ConfigManager
@@ -24,6 +24,13 @@ app.conf.update({
     'event_timezone': 'UTC',
     'task_acks_late': True,
     'task_reject_on_worker_lost': True,
+    'task_annotations': {
+        '*': {
+            'max_retries': None,
+            'retry_backoff': True,
+            'default_retry_delay': 10,
+            }
+        },
     })
 
 # Autodiscover tasks
@@ -43,9 +50,10 @@ def setup_loggers(logger, *args, **kwargs):
         return False
 
     log_options = settings.get('logging')
+    version = settings.get('version')
 
     if 'format' not in log_options:
-        log_options['format'] = '%(asctime)s %(name)s %(funcName)10s() %(levelname)s: %(message)s'
+        log_options['format'] = '%(asctime)s '+version+' %(name)s %(funcName)10s() %(levelname)s: %(message)s'
 
     formatter = logging.Formatter(log_options['format'])
 
@@ -55,6 +63,8 @@ def setup_loggers(logger, *args, **kwargs):
         fh.setFormatter(formatter)
         logger.addHandler(fh)
 
-@celeryd_after_setup.connect
-def capture_worker_name(sender, instance, **kwargs):
+@celeryd_init.connect
+def init_app(sender, instance, **kwargs):
     settings.set('worker_name', '{0}'.format(sender))
+    with open('version.txt', 'r') as version:
+        settings.set('version', version.read().strip())
