@@ -64,7 +64,7 @@ class ArchiveProcessor(ProcessorBase):
             if os.path.isfile(fpath):
                 with open(fpath, 'rb') as fdata:
                     self.dispatch(fdata.read(), parent=sample['id'], filename=fname)
-                extracted_files.append(fpath)
+                extracted_files.append(fname)
 
         # Cleanup temp dir
         shutil.rmtree(temp_dir)
@@ -86,7 +86,7 @@ class ArchiveProcessor(ProcessorBase):
         ret['contents'] = archive_contents
         ret['extracted_files'] = extracted_files
 
-        if set(archive_contents) is not set(extracted_files):
+        if set(archive_contents) != set(extracted_files):
             self.add_tag('extraction-incomplete')
 
         if current_password:
