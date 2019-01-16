@@ -7,9 +7,8 @@ from datetime import datetime
 from celery import Task
 from celery.utils.log import get_task_logger
 
-from aleph import app, settings
-from aleph.config import ConfigManager
-from aleph.utils import encode_data, decode_data, call_task
+from aleph.config import ConfigManager, settings
+from aleph.common.utils import encode_data, decode_data, call_task
 
 class TaskBase(Task):
 

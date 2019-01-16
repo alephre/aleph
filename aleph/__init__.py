@@ -5,16 +5,13 @@ import logging
 from celery import Celery
 from celery.signals import after_setup_logger, celeryd_init
 
-from aleph import routes
-from aleph.constants import CELERY_AUTODISCOVER_TASKS
-from aleph.config import ConfigManager
+from aleph.config import ConfigManager, routes, settings
+from aleph.config.constants import CELERY_AUTODISCOVER_TASKS
+from aleph.common.base import TaskBase
 
 # Celery app creation
 app = Celery('aleph')
-
-# Setup Aleph Settings
-settings = ConfigManager()
-settings.load('config.yaml')
+app.Task = TaskBase
 
 # Load Routes
 app.config_from_object(routes)
@@ -38,7 +35,7 @@ app.conf.update({
 
 
 # Autodiscover tasks
-app.autodiscover_tasks(CELERY_AUTODISCOVER_TASKS)
+app.autodiscover_tasks(CELERY_AUTODISCOVER_TASKS, force=True)
 
 @after_setup_logger.connect
 def setup_loggers(logger, *args, **kwargs):

@@ -16,6 +16,7 @@ class ConfigManager(object):
     def load(self, path):
         with open(path) as f:
             self.config = yaml.safe_load(f)
+            print(self.config)
 
     def dump(self):
         return self.config
@@ -30,3 +31,8 @@ class ConfigManager(object):
 
     def has_option(self, option):
         return (option in self.base())
+
+
+# Setup Aleph Settings
+settings = ConfigManager()
+settings.load('config.yaml')

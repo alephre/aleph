@@ -1,7 +1,7 @@
 import pefile
 import datetime
 
-from aleph.base import ProcessorBase
+from aleph.common.base import ProcessorBase
 
 class PEInfoProcessor(ProcessorBase):
 

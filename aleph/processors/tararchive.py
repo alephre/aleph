@@ -1,5 +1,5 @@
 import tarfile
-from aleph.processors.archive_processor import ArchiveProcessor
+from aleph.processors.archive import ArchiveProcessor
 
 class TarArchiveProcessor(ArchiveProcessor):
 

@@ -1,6 +1,6 @@
 from aleph import app
-from aleph.utils import run_plugin
-from aleph.base import TaskBase
+from aleph.common.utils import run_plugin
+from aleph.common.base import TaskBase
 
 
 @app.task(bind=True, base=TaskBase)

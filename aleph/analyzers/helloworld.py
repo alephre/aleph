@@ -1,7 +1,7 @@
 import hashlib
 import binascii
 
-from aleph.base import AnalyzerBase
+from aleph.common.base import AnalyzerBase
 
 class HelloWorldAnalyzer(AnalyzerBase):
 

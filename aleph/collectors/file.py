@@ -2,8 +2,7 @@ import os
 
 from time import time
 
-from aleph import settings
-from aleph.base import CollectorBase
+from aleph.common.base import CollectorBase
 
 class FileCollector(CollectorBase):
 

@@ -1,6 +1,6 @@
 import email
 import tempfile
-from aleph.base import ProcessorBase
+from aleph.common.base import ProcessorBase
 
 class EmailProcessor(ProcessorBase):
 

@@ -1,7 +1,7 @@
 import string
 
-from aleph.base import ProcessorBase
-from aleph.constants import MIMETYPES_ARCHIVE
+from aleph.common.base import ProcessorBase
+from aleph.config.constants import MIMETYPES_ARCHIVE
 
 class StringsProcessor(ProcessorBase):
 

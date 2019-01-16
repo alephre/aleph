@@ -4,8 +4,7 @@ from celery.utils.log import get_task_logger
 from hashlib import sha256
 from base64 import b64encode, b64decode
 
-from aleph import app
-from aleph.loader import load_processor, load_analyzer
+from aleph.common.loader import load_processor, load_analyzer
 
 logger = get_task_logger(__name__)
 
@@ -89,6 +88,9 @@ def run_plugin(component_type, plugin_name, args):
     logger.debug("Execution completed for %s plugin" % plugin.name)
 
 def call_task(task_name, args, routing_key='celery'):
+
+    from aleph import app
+
     try:
         app.send_task(task_name, args=args, routing_key=routing_key)
     except Exception as e:

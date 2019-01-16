@@ -1,14 +1,10 @@
-import os
-import json
+from aleph import app
+from aleph.config import settings
+from aleph.common.loader import load_collector
 
-from aleph import app, settings
-from aleph.loader import load_collector
-from aleph.utils import hash_data, encode_data
-from aleph.base import TaskBase
+COLLECTORS = [(name, load_collector(name)(options)) for name, options in settings.get('collector').items()] if settings.has_option('collector') else []
 
-COLLECTORS = [(name, load_collector(name)(options)) for name, options in settings.get('collector').items()]
-
-@app.task(bind=True, base=TaskBase)
+@app.task(bind=True)
 def collect(self):
 
     for name, collector in COLLECTORS:

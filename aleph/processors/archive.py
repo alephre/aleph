@@ -4,7 +4,7 @@ import shutil
 
 from tempfile import mkdtemp
 from io import BytesIO
-from aleph.base import ProcessorBase
+from aleph.common.base import ProcessorBase
 
 class ArchiveProcessor(ProcessorBase):
 

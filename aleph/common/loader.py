@@ -5,9 +5,12 @@ import pkgutil
 
 def load_component(component_name, package_name, component_type):
 
+    if component_name == 'tasks':
+        raise ImportError('Cannot import tasks module as a component')
+
     try:
 
-        module_name = 'aleph.%s.%s_%s'  % (package_name.lower(), component_name.lower(), component_type.lower())
+        module_name = 'aleph.%s.%s'  % (package_name.lower(), component_name.lower())
         class_name = None
         
         module = importlib.import_module(module_name)

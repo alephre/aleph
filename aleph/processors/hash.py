@@ -1,7 +1,7 @@
 import hashlib
 import binascii
 
-from aleph.base import ProcessorBase
+from aleph.common.base import ProcessorBase
 
 class HashProcessor(ProcessorBase):
 

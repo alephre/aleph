@@ -1,7 +1,8 @@
-from aleph import app, settings
-from aleph.loader import list_submodules
-from aleph.utils import decode_data, hash_data, get_filetype, get_plugin, call_task
-from aleph.base import TaskBase
+from aleph import app
+from aleph.config import settings
+from aleph.common.loader import list_submodules
+from aleph.common.utils import decode_data, hash_data, get_filetype, get_plugin, call_task
+from aleph.common.base import TaskBase
 
 @app.task(bind=True, base=TaskBase)
 def analyze(self, sample):
@@ -44,9 +45,7 @@ def dispatch(component_type, sample):
 
     metadata = sample['metadata'] if 'data' in sample.keys() else {}
 
-    for loader, name, is_pkg in plugins:
-
-        plugin_name = name.split('_')[0]
+    for loader, plugin_name, is_pkg in plugins:
 
         if plugin_name.startswith('tasks'):
             continue

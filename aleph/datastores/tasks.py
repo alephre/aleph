@@ -1,11 +1,10 @@
-from aleph import app, settings
-from aleph.loader import load_datastore
-from aleph.base import TaskBase
-
+from aleph import app
+from aleph.config import settings
+from aleph.common.loader import load_datastore
 
 DATASTORES = [(name, load_datastore(name)(options)) for name, options in settings.get('datastore').items()]
 
-@app.task(bind=True, base=TaskBase)
+@app.task(bind=True)
 def update_task_states(self):
 
     for name, datastore in DATASTORES:
@@ -14,7 +13,7 @@ def update_task_states(self):
 
     self.logger.debug("'update_task_states' completed on all datastores")
 
-@app.task(bind=True, base=TaskBase)
+@app.task(bind=True)
 def store(self, sample_id, metadata):
 
     for name, datastore in DATASTORES:

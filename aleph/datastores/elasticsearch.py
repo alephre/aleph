@@ -1,5 +1,5 @@
 from elasticsearch import Elasticsearch
-from aleph.base import DatastoreBase
+from aleph.common.base import DatastoreBase
 
 class ElasticsearchDatastore(DatastoreBase):
 

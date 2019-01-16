@@ -1,6 +1,6 @@
 import os
 
-from aleph.base import StorageBase
+from aleph.common.base import StorageBase
 
 class LocalStorage(StorageBase):
 

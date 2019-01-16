@@ -1,12 +1,12 @@
 import os
 
-from aleph import app, settings
-from aleph.loader import load_storage
-from aleph.base import TaskBase
+from aleph import app
+from aleph.config import settings
+from aleph.common.loader import load_storage
 
 STORAGES = [(name, load_storage(name)(options)) for name, options in settings.get('storage').items()]
 
-@app.task(bind=True, base=TaskBase)
+@app.task(bind=True)
 def store(self, sample_id, sample_data, enqueue=True):
 
     for name, storage in STORAGES:

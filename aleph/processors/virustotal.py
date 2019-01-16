@@ -3,9 +3,9 @@ from operator import itemgetter
 
 from virus_total_apis import PublicApi as VirusTotal
 
-from aleph.utils import hash_data, in_string
-from aleph.base import ProcessorBase
-from aleph.constants import MIMETYPES_ARCHIVE
+from aleph.common.utils import hash_data, in_string
+from aleph.common.base import ProcessorBase
+from aleph.config.constants import MIMETYPES_ARCHIVE
 
 VT_RESPONSE_OK = 200
 VT_SCAN_OK = 1
