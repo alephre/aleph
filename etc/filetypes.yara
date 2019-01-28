@@ -17,3 +17,17 @@ rule is_pdf
     condition:
         $a in (0..60)
 }
+
+rule is_apk
+{
+  meta:
+    file_type = "application/vnd.android.package-archive"
+    file_desc = "Android Application (APK)"
+
+  strings:
+    $zip_head = "PK"
+    $manifest = "AndroidManifest.xml"
+
+  condition:
+    $zip_head at 0 and $manifest and #manifest >= 2
+}
