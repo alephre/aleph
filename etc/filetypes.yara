@@ -1,23 +1,4 @@
-rule is_pe
-{
-    meta:
-        file_type = "exe"
-        file_desc = "winpe"
-    condition:
-        uint16(0) == 0x5A4D and uint32(uint32(0x3C)) == 0x00004550 
-}
-
-rule is_pdf
-{
-    meta:
-        file_type = "pdf"
-        file_desc = "annoying documents"
-    strings:
-        $a = "%PDF-"
-    condition:
-        $a in (0..60)
-}
-
+/* Android APK & Related **/
 rule is_apk
 {
   meta:
@@ -30,4 +11,19 @@ rule is_apk
 
   condition:
     $zip_head at 0 and $manifest and #manifest >= 2
+}
+
+rule is_dex
+{
+  meta:
+    file_meta = "application/vnd.android.dalvik-executable"
+    file_desc = "Compiled Android application code file (DEX/ODEX)"
+
+  strings:
+    $dex = { 64 65 78 0A 30 33 ?? 00 }
+    $odex = { 64 65 79 0A 30 33 ?? 00 }
+
+  condition:
+    $dex at 0 or
+    $odex at 0
 }

@@ -48,6 +48,8 @@ class ElasticsearchDatastore(DatastoreBase):
             'processors_completed': [],
             'analyzers_dispatched': [],
             'analyzers_completed': [],
+            'known_filenames': [],
+            'parents': [],
         }
 
         # Merge document with defaults for upsert case

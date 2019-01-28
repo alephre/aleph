@@ -35,6 +35,11 @@ class APKFileProcessor(ProcessorBase):
 
         apk = self.parse_apk(data)
 
+        # Extract DEX and send to pipeline
+        dex = apk.get_dex()
+        if dex:
+            self.dispatch(dex, parent=sample['id'], filename="%s.dex" % sample['id'])
+
         if apk:
             result = {
             'min_sdk_version': apk.get_min_sdk_version(),
@@ -50,5 +55,10 @@ class APKFileProcessor(ProcessorBase):
             }
             
             self.add_tag('apk')
+
+            # Extract certificates if APK is signed
+            if apk.is_signed:
+                for cert in apk.get_certificates():
+                    self.dispatch(cert.contents, parent=sample['id'], filename="%s.der" % cert.sha256)
 
         return result

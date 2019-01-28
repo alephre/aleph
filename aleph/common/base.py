@@ -81,18 +81,12 @@ class ComponentBase(object):
             if not self.options.has_option(option):
                 raise KeyError('Required option "%s" not defined for %s handler' % (option, self.name))
 
-    def dispatch(self, data, metadata={}, filename=None, parent=None, args=None):
+    def dispatch(self, data, metadata={}, filename=None, parent=None):
 
         metadata['timestamp'] = datetime.utcnow().timestamp()
 
-        metadata['sources'] = [{ 
-                'worker': settings.get('worker_name'), 
-                'component_type': self.component_type,
-                'component_name': self.name, 
-                'filename': filename,
-                'parent': parent,
-                'args': args,
-            }]
+        metadata['known_filenames'] = [filename,]
+        metadata['parents'] = [parents,]
        
         safe_data = encode_data(data)
         call_task('aleph.tasks.process', args=[safe_data, metadata])

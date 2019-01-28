@@ -40,37 +40,23 @@
             },
                 "type": "keyword"
         },
-
-        "sources": {
-            "properties": {
-                "collector": {
-                    "fields": {
-                        "keyword": {
-                            "ignore_above": 256,
-                            "type": "keyword"
-                        }
-                    },
-                    "type": "text"
-                },
-                "path": {
-                    "fields": {
-                        "keyword": {
-                            "ignore_above": 256,
-                            "type": "keyword"
-                        }
-                    },
-                    "type": "text"
-                },
-                "worker": {
-                    "fields": {
-                        "keyword": {
-                            "ignore_above": 256,
-                            "type": "keyword"
-                        }
-                    },
-                    "type": "text"
+        "known_filenames": {
+            "fields": {
+                "keyword": {
+                    "ignore_above": 256,
+                    "type": "keyword"
                 }
-            }
+            },
+            "type": "keyword"
+        },
+        "parents": {
+            "fields": {
+                "keyword": {
+                    "ignore_above": 256,
+                    "type": "keyword"
+                }
+            },
+            "type": "keyword"
         },
         "tags": {
             "fields": {
