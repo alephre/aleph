@@ -17,13 +17,10 @@ task_queues = (
     )
 # Celery Routing
 task_routes = ([
-    ('aleph.collectors.tasks.collect', {'queue': 'collector'}),
-    ('aleph.collectors.tasks.ingest', {'queue': 'collector'}),
-    ('aleph.storages.tasks.store', {'queue': 'store'}),
-    ('aleph.datastores.tasks.store', {'queue': 'store'}),
-    ('aleph.datastores.tasks.update_task_states', {'queue': 'store'}),
-    ('aleph.tasks.process', {'queue': 'manager'}),
-    ('aleph.tasks.analyze', {'queue': 'manager'}),
+    ('aleph.collectors.tasks.*', {'queue': 'collector'}),
+    ('aleph.storages.tasks.*', {'queue': 'store'}),
+    ('aleph.datastores.tasks.*', {'queue': 'store'}),
+    ('aleph.tasks.*', {'queue': 'manager'}),
     ('aleph.processors.tasks.run', {'exchange': plugins}),
     ('aleph.analyzers.tasks.run', {'exchange': plugins}),
 ],)

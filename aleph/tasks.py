@@ -1,8 +1,9 @@
 from aleph import app
 from aleph.config import settings
 from aleph.common.loader import list_submodules
-from aleph.common.utils import decode_data, hash_data, get_filetype, get_plugin, call_task
+from aleph.common.utils import decode_data, hash_data, get_plugin, call_task
 from aleph.common.base import TaskBase
+from aleph.common.filetype import detect_filetype
 
 @app.task(bind=True, base=TaskBase)
 def analyze(self, sample):
@@ -19,7 +20,7 @@ def process(self, sample_data, metadata):
 
     self.logger.info("Recieved sample %s for processing" % sample_id)
 
-    metadata['mimetype'], metadata['mimetype_str'] = get_filetype(binary_data)
+    metadata['mimetype'], metadata['mimetype_str'] = detect_filetype(binary_data)
     metadata['size'] = len(binary_data)
 
     # Store sample

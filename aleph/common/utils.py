@@ -24,14 +24,6 @@ def decode_data(data):
 def in_string(tokens, string):
     return any(token in str(string).lower() for token in tokens)  
 
-def get_filetype(data):
-
-    #@TODO change to YARA with magic fallback. Yara results should be equal to magic's
-    return (
-        magic.from_buffer(data, mime=True),
-        magic.from_buffer(data),
-    )
-
 def get_plugin(component_type, plugin_name):
 
     module_name = '%s_%s' % (plugin_name, component_type)

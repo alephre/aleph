@@ -19,6 +19,7 @@ app.config_from_object(routes)
 # Celery Options
 app.conf.update({
     'broker_url': settings.get('transport'),
+    'result_backend': 'rpc://' if not settings.has_option('result_backend') else settings.get('result_backend'),
     'broker_transport_options': {'confirm_publish': True},
     'event_timezone': 'UTC',
     'task_acks_late': True,

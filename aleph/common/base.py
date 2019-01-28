@@ -206,3 +206,11 @@ class CollectorBase(ComponentBase):
 
     def collect(self):
         raise NotImplementedError('Collection routine not implemented on %s collector' % self.name)
+
+class FiletypeDetectorBase(object):
+
+    component_type = 'filetype_detector'
+
+    def detect(self, sample):
+        raise NotImplementedError('Detect routine not implemented on %s detector' % self.name)
+

@@ -14,3 +14,5 @@ MIMETYPES_ARCHIVE = [
     'application/x-rar',
     'application/tar'
 ]
+
+ETC_FILETYPE_YARA_RULES = 'etc/filetypes.yara'
