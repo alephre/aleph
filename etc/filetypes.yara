@@ -37,11 +37,10 @@ rule is_apk
     file_desc = "Android Application (APK)"
 
   strings:
-    $zip_head = "PK"
     $manifest = "AndroidManifest.xml"
 
   condition:
-    $zip_head at 0 and $manifest and #manifest >= 2
+    (uint16(0) == 0x4B50 and $manifest and #manifest >= 2)
 }
 
 rule is_zip
@@ -105,6 +104,9 @@ rule is_macho
   meta:
     file_type = ""
     file_desc = ""
+  strings:
+    $page = "__PAGEZERO" ascii
+    $text = "__TEXT" ascii
   condition:
     (
       uint32(0) == 0xfeedface or
@@ -112,7 +114,7 @@ rule is_macho
       uint32(0) == 0xfeedfacf or
       uint32(0) == 0xcffaedfe or
       uint32(0) == 0xbebafeca
-     )
+     ) and $page and $text
 }
 
 rule is_elf
@@ -197,6 +199,26 @@ rule is_shellscript
     $magic at 0
 }
 
+rule is_html
+{
+  meta:
+    file_type = ""
+    file_desc = ""
+  strings:
+    $header0 = /<html\s?(>)?/ nocase
+    $header1 = "<!doctype html>" ascii nocase
+    $end = /</html\s?(>)?/ nocase
+  condition:
+    ($header1 in (0..256) or $header2 in (0..256))
+    or
+    (
+      (
+        $header1 in (0..256) or $header2 in (0..256)
+      )
+      and $end
+    )
+}
+
 rule is_gif
 {
   meta:
@@ -244,3 +266,15 @@ rule is_email_with_attachment
       $return in (0..2048)
     ) and $attach
 }
+
+rule is_x509
+{
+  meta:
+    file_type = ""
+    file_desc = ""
+  strings:
+    $bytes = {30 82 ?? ?? 30 82 ?? ??}
+  condition:
+    $bytes
+}
+
