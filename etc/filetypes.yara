@@ -7,6 +7,7 @@ rule is_pe
     uint16(0) == 0x5A4D and uint32(0x3C) == 0x4550
 }
 
+
 rule contains_pe
 {
   meta:
@@ -19,6 +20,7 @@ rule contains_pe
       (uint32(@a[i] + uint32(@a[i] + 0x3C)) == 0x00004550)
 }
 
+
 rule is_pdf
 {
   meta:
@@ -29,6 +31,7 @@ rule is_pdf
   condition:
     $a in (0..1024)
 }
+
 
 rule is_apk
 {
@@ -43,6 +46,7 @@ rule is_apk
     (uint16(0) == 0x4B50 and $manifest and #manifest >= 2)
 }
 
+
 rule is_zip
 {
   meta:
@@ -51,6 +55,7 @@ rule is_zip
   condition:
     uint16(0) == 0x4B50
 }
+
 
 rule is_chm
 {
@@ -64,6 +69,7 @@ rule is_chm
     $magic at 0
 }
 
+
 rule is_7zip
 {
   meta:
@@ -72,6 +78,7 @@ rule is_7zip
   condition:
     (uint32be(0x0) == 0x377abcaf and uint16be(0x4) == 0x271c)
 }
+
 
 rule is_java
 {
@@ -86,6 +93,7 @@ rule is_java
     ($magic at 0 and ($meta or $class))
 }
 
+
 rule is_flash
 {
   meta:
@@ -98,6 +106,7 @@ rule is_flash
     or
     (uint16be(0x0) == 0x5a57 and uint8(0x2) == 0x53)
 }
+
 
 rule is_macho
 {
@@ -117,6 +126,7 @@ rule is_macho
      ) and $page and $text
 }
 
+
 rule is_elf
 {
   meta:
@@ -125,6 +135,7 @@ rule is_elf
   condition:
     uint32(0) == 0x464C457F
 }
+
 
 rule is_lnk
 {
@@ -135,6 +146,7 @@ rule is_lnk
     (uint32be(0x0) == 0x4c000000 and uint32be(0x4) == 0x1140200)
 }
 
+
 rule is_lzip
 {
   meta:
@@ -143,6 +155,7 @@ rule is_lzip
   condition:
     (uint32be(0x0) == 0x4c5a4950)
 }
+
 
 rule is_ole
 {
@@ -158,6 +171,7 @@ rule is_ole
     ) or ($magic in (0..1024))
 }
 
+
 rule is_postscript
 {
   meta:
@@ -168,6 +182,7 @@ rule is_postscript
     (uint32be(0x0) == 0x25215053)
 }
 
+
 rule is_rar
 {
   meta:
@@ -176,6 +191,7 @@ rule is_rar
   condition:
     (uint32be(0x0) == 0x52617221 and uint16be(0x4) == 0x1a07)
 }
+
 
 rule is_rtf
 {
@@ -188,6 +204,7 @@ rule is_rtf
     $magic in (0..30)
 }
 
+
 rule is_shellscript
 {
   meta:
@@ -198,6 +215,7 @@ rule is_shellscript
   condition:
     $magic at 0
 }
+
 
 rule is_html
 {
@@ -219,6 +237,7 @@ rule is_html
     )
 }
 
+
 rule is_gif
 {
   meta:
@@ -231,6 +250,7 @@ rule is_gif
   condition:
     ($a at 0 or $b at 0 or $c at 0)
 }
+
 
 rule is_email
 {
@@ -248,6 +268,7 @@ rule is_email
       $return in (0..2048)
     )
 }
+
 
 rule is_email_with_attachment
 {
@@ -267,6 +288,7 @@ rule is_email_with_attachment
     ) and $attach
 }
 
+
 rule is_x509
 {
   meta:
@@ -278,3 +300,36 @@ rule is_x509
     $bytes
 }
 
+
+rule is_iqy
+{
+  meta:
+    file_type = ""
+    file_desc = ""
+  strings:
+    /*
+      IQY and SLK files have been used lately to spread malware in spam emails
+      Catching them with this YARA rule will let us pull out URLs from them, which
+      is typically the malware delivery URL
+    */
+    $magic = /^[ \t]*WEB[ \t]*(\x0A|\x0D\x0A)/ nocase
+  condition:
+    $magic at 0
+}
+
+
+rule is_slk
+{
+  meta:
+    file_type = ""
+    file_desc = ""
+  strings:
+    /*
+      IQY and SLK files have been used lately to spread malware in spam emails
+      Catching them with this YARA rule will let us pull out URLs from them, which
+      is typically the malware delivery URL
+    */
+    $magic = "ID;P"
+  condition:
+    $magic at 0
+}
