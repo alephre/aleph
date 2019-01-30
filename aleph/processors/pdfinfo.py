@@ -13,7 +13,7 @@ class PDFInfoProcessor(ProcessorBase):
     mimetypes = ['application/pdf']
 
     def process(self, sample):
-        """Get PDF document metadata information
+        """Get PDF document metadata and encryption information
 
         @param sample: raw data of sample to process
         @type unicode
@@ -33,10 +33,10 @@ class PDFInfoProcessor(ProcessorBase):
         results = {}
 
         try:
-            pdf_io = BytesIO()
-            pdf_io.write(sample['data'])
+            pdf_io = BytesIO(sample['data'])
+            pdf_io.close()
         except Exception as err:
-            self.logger.error('Failed to read PDF document into parser: {}'.format(str(err)))
+            self.logger.error(f'Failed to read PDF document into parser: {sample['id']} - {str(err)}')
             raise err
 
         parser = PDFParser(pdf_io)
@@ -54,7 +54,7 @@ class PDFInfoProcessor(ProcessorBase):
             doc_info = document.info[0]
             results.update(doc_info)
         else:
-            self.logger.info('No metadata available from PDF document')
+            self.logger.info(f'No metadata available from PDF document: {sample['id']}')
             self.add_tag('no-metadata')
 
         return results
