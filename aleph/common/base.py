@@ -145,10 +145,36 @@ class ProcessorBase(PluginBase):
 class AnalyzerBase(PluginBase):
 
     component_type = 'analyzer'
+
+    categories = []
+    weights = {'low': 1, 'medium': 2, 'high': 4, 'critical': 8}
+
+    flags = []
     
-    def process(self, sample):
+    def add_flag(self, flag_text, category, severity, evil_rating = None):
+
+        if category not in self.categories:
+            raise KeyError('Category %s does not exist' % category)
+
+        if severity not in self.weights.keys():
+            raise KeyError('Invalid severity: %s' % severity)
+
+        flag = {
+            'text': flag_text,
+            'category': category,
+            'severity': severity,
+            'evil_rating': evil_rating if evil_rating else self.weights[severity]
+        }
+
+        self.flags.append(flag)
+
+    def analyze(self, sample):
         raise NotImplementedError('Process routine not implemented on %s plugin' % self.name)
 
+    def process(self, sample):
+
+        self.analyze(sample)
+        return self.flags
 
 class DatastoreBase(ComponentBase):
 

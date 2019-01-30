@@ -86,16 +86,15 @@ class PEInfoProcessor(ProcessorBase):
 
             # Check imports
             if hasattr(pe, 'DIRECTORY_ENTRY_IMPORT'):
-                imports = []
+                imports = {}
                 for lib in pe.DIRECTORY_ENTRY_IMPORT:
-                    importset = {'dllname': lib.dll.decode('utf-8'), 'imports': []}
+                    dll_name = lib.dll.decode('utf-8')
+                    imports[dll_name] = []
 
                     for imp in lib.imports:
                         if (imp.name != None) and (imp.name != ""):
-                            importset['imports'].append({'address': hex(imp.address), 'name': imp.name.decode('utf-8')})
+                            imports[dll_name].append({'address': hex(imp.address), 'name': imp.name.decode('utf-8')})
                             
-                    imports.append(importset)
-
                 data['imports'] = imports
 
             # Check exports

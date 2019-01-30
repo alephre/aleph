@@ -63,8 +63,16 @@ def run_plugin(component_type, plugin_name, args):
     logger.debug("Running %s plugin" % plugin_name)
     result = plugin.process(args)
 
-    metadata = {'artifacts': {}}
-    metadata['artifacts'][component_type] = {plugin.name: result}
+    metadata = {}
+
+    if component_type == 'processor':
+        component_key = 'artifacts'
+    elif component_type == 'analyzer':
+        component_key = 'flags'
+    else:
+        raise AttributeError('Invalid component type %s' % component_type)
+
+    metadata[component_key] = {plugin.name: result}
 
     # Add tags to main document metadata
     if 'tags' in plugin.document_meta:
