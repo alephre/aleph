@@ -86,7 +86,7 @@ class ComponentBase(object):
         metadata['timestamp'] = datetime.utcnow().timestamp()
 
         metadata['known_filenames'] = [filename,]
-        metadata['parents'] = [parents,]
+        metadata['parents'] = [parent,]
        
         safe_data = encode_data(data)
         call_task('aleph.tasks.process', args=[safe_data, metadata])
@@ -146,20 +146,36 @@ class AnalyzerBase(PluginBase):
 
     component_type = 'analyzer'
 
-    categories = []
-    weights = {'low': 1, 'medium': 2, 'high': 4, 'critical': 8}
+    weights = {'info': 1, 'uncommon': 2, 'suspicious': 4, 'malicious': 8}
+
+    sample = None
 
     flags = []
-    
-    def add_flag(self, flag_text, category, severity, evil_rating = None):
+    indicators = []
+    artifacts = {}
 
-        if category not in self.categories:
-            raise KeyError('Category %s does not exist' % category)
+    def setup(self):
+
+        self.flags = []
+        self.indicators = []
+        self.artifacts = {}
+
+    def add_indicator(self, indicator):
+        self.indicators.append(indicator)
+
+    def has_indicator(self, indicator):
+        return indicator in self.indicators
+
+    def has_indicators(self, indicators):
+        return set(indicators).issubset(self.indicators)
+    
+    def add_flag(self, flag_title, flag_text, category, severity, evil_rating = None):
 
         if severity not in self.weights.keys():
             raise KeyError('Invalid severity: %s' % severity)
 
         flag = {
+            'title': flag_title,
             'text': flag_text,
             'category': category,
             'severity': severity,
@@ -168,18 +184,31 @@ class AnalyzerBase(PluginBase):
 
         self.flags.append(flag)
 
-    def analyze(self, sample):
+    def analyze(self):
         raise NotImplementedError('Process routine not implemented on %s plugin' % self.name)
+
+    def load(self, sample):
+
+        if 'metadata' not in sample.keys():
+            raise KeyError('Sample does not have metadatra')
+
+        if 'artifacts' not in sample['metadata']:
+            raise KeyError('Sample artifacts not present in metadata')
+
+        self.sample = sample
+        self.artifacts = self.sample['metadata']['artifacts']
 
     def process(self, sample):
 
-        self.analyze(sample)
+        self.load(sample)
+        self.analyze()
         return self.flags
 
 class DatastoreBase(ComponentBase):
 
     component_type = 'datastore'
     default_options = { 'enabled': False, }
+
     engine = None
 
     def update_task_states(self):
@@ -207,11 +236,7 @@ class StorageBase(ComponentBase):
     component_type = 'storage'
     default_options = { 'enabled': False, }
 
-    def encode(self, data):
-        return encode_data(data)
-
-    def decode(self, data):
-        return decode_data(data)
+    engine = None
 
     def retrieve(self, sample_id):
         raise NotImplementedError('Retrieve routine not implemented on %s storage handler' % self.name)
@@ -224,10 +249,12 @@ class CollectorBase(ComponentBase):
     component_type = 'collector'
     default_options = { 'enabled': False, }
 
+    engine = None
+
     def collect(self):
         raise NotImplementedError('Collection routine not implemented on %s collector' % self.name)
 
-class FiletypeDetectorBase(object):
+class FiletypeDetectorBase(ComponentBase):
 
     component_type = 'filetype_detector'
 

@@ -1,6 +1,8 @@
 from elasticsearch import Elasticsearch
 from aleph.common.base import DatastoreBase
 
+DEFAULT_TIMEOUT=30
+
 class ElasticsearchDatastore(DatastoreBase):
 
     default_options = {
@@ -133,5 +135,6 @@ class ElasticsearchDatastore(DatastoreBase):
             id=sample_id,
             index=self.options.get('index'), 
             doc_type=self.options.get('doctype'),
-            body=document_body
+            body=document_body,
+            request_timeout=DEFAULT_TIMEOUT
             )

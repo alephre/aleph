@@ -1,8 +1,10 @@
-import magic
+import math
+import re
 
 from celery.utils.log import get_task_logger
 from hashlib import sha256
 from base64 import b64encode, b64decode
+from collections import Counter
 
 from aleph.common.loader import load_processor, load_analyzer
 
@@ -23,6 +25,25 @@ def decode_data(data):
 
 def in_string(tokens, string):
     return any(token in str(string).lower() for token in tokens)  
+
+def entropy(data):
+    """Calculate the entropy of a chunk of data."""
+
+    if len(data) == 0:
+        return 0.0
+
+    occurences = Counter(bytearray(data))
+
+    entropy = 0
+    for x in occurences.values():
+        p_x = float(x) / len(data)
+        entropy -= p_x*math.log(p_x, 2)
+
+    return entropy
+
+def normalize_name(name):
+    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
 def get_plugin(component_type, plugin_name):
 
