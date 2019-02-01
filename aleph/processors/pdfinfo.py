@@ -1,10 +1,10 @@
-#!/usr/bin/env python3
 from io import BytesIO
 
 from pdfminer.pdfparser import PDFParser
 from pdfminer.pdfdocument import PDFDocument
 
 from aleph.common.base import ProcessorBase
+from aleph.common.utils import normalize_name
 
 
 class PDFInfoProcessor(ProcessorBase):
@@ -32,15 +32,10 @@ class PDFInfoProcessor(ProcessorBase):
         """
         results = {}
 
-        try:
-            pdf_io = BytesIO(sample['data'])
-            pdf_io.close()
-        except Exception as err:
-            self.logger.error(f'Failed to read PDF document into parser: {sample['id']} - {str(err)}')
-            raise err
+        with BytesIO(sample['data']) as pdf_io:
+            parser = PDFParser(pdf_io)
+            document = PDFDocument(parser)
 
-        parser = PDFParser(pdf_io)
-        document = PDFDocument(parser)
         parser.set_document(document)
 
         if document.encryption is not None:
@@ -52,9 +47,10 @@ class PDFInfoProcessor(ProcessorBase):
 
         if len(document.info) > 0:
             doc_info = document.info[0]
-            results.update(doc_info)
+            for k,v in doc_info.items():
+                results[normalize_name(k)] = v.decode('utf-8', errors='ignore')
         else:
-            self.logger.info(f'No metadata available from PDF document: {sample['id']}')
+            self.logger.debug('No metadata available from PDF document (%s)' % sample['id'])
             self.add_tag('no-metadata')
 
         return results

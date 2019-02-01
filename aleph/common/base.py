@@ -114,6 +114,10 @@ class PluginBase(ComponentBase):
         if not self.options.get('enabled'):
             return False
 
+        if 'mimetype' not in sample['metadata']:
+            self.logger.error('mimetype entry not present on sample %s' % sample['id'])
+            return False
+
         # Check for mimetype-specific plugins
         mimetype = sample['metadata']['mimetype']
         if len(self.mimetypes) > 0:

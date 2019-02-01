@@ -65,7 +65,10 @@ def get_plugin(component_type, plugin_name):
 
     logger.debug('Loading %s plugin from disk' % module_name)
 
-    PLUGIN_CACHE[module_name] = loader(plugin_name)
+    try:
+        PLUGIN_CACHE[module_name] = loader(plugin_name)
+    except Exception as e:
+        raise ImportError('Error importing module %s: %s' % (plugin_name, str(e)))
 
     return PLUGIN_CACHE[module_name]
 

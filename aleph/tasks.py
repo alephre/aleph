@@ -1,3 +1,5 @@
+import logging
+
 from aleph import app
 from aleph.config import settings
 from aleph.common.loader import list_submodules
@@ -38,6 +40,8 @@ def process(self, sample_data, metadata):
 
 def dispatch(component_type, sample):
 
+    logger = logging.getLogger(__name__)
+
     sample_id = sample['id'] 
 
     plugins = list_submodules('aleph.%ss' % component_type)
@@ -51,16 +55,18 @@ def dispatch(component_type, sample):
         if plugin_name.startswith('tasks'):
             continue
 
-        plugin = get_plugin(component_type, plugin_name)(dry=True)
+        try:
+            plugin = get_plugin(component_type, plugin_name)(dry=True)
 
-        if not plugin.can_act(sample):
-            continue
+            if not plugin.can_act(sample):
+                continue
 
-        routing_key = 'plugins.%s' % plugin.category
-        call_task('aleph.%ss.tasks.run' % component_type, args=[plugin_name, sample], routing_key=routing_key)
+            routing_key = 'plugins.%s' % plugin.category
+            call_task('aleph.%ss.tasks.run' % component_type, args=[plugin_name, sample], routing_key=routing_key)
 
-
-        plugins_dispatched.append(plugin.name)
+            plugins_dispatched.append(plugin.name)
+        except Exception as e:
+            logger.error('Failed to load %s plugin: %s' % (plugin_name, str(e)))
 
     # Track dispatched plugins
     metadata['%ss_dispatched' % component_type] = plugins_dispatched
