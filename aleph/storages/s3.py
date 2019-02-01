@@ -38,7 +38,7 @@ class S3Storage(StorageBase):
             document = self.engine.Object(self.options.get('bucket'), bucket_key).put(Body=data)
 
             return True
-            
+
         except Exception as e:
             self.logger.error('Error storing sample %s: %s' % (sample_id, str(e)))
             return False
@@ -55,3 +55,4 @@ class S3Storage(StorageBase):
         if not self.engine.Bucket(self.options.get('bucket')) in self.engine.buckets.all():
             self.logger.error('S3 Storage bucket does not exist: %s' % self.options.get('bucked'))
             return False
+
