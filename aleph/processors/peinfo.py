@@ -1,32 +1,10 @@
 import pefile
 import datetime
 
+from itertools import zip_longest
+
 from aleph.common.base import ProcessorBase
 from aleph.common.utils import entropy, normalize_name
-
-RESOURCE_TYPES = {
-    1: 'RT_CURSOR',
-    2: 'RT_BITMAP',
-    3: 'RT_ICON',
-    4: 'RT_MENU',
-    5: 'RT_DIALOG',
-    6: 'RT_STRING',
-    7: 'RT_FONTDIR',
-    8: 'RT_FONT',
-    9: 'RT_ACCELERATOR', 
-    10: 'RT_RCDATA',
-    11: 'RT_MESSAGETABLE',
-    12: 'RT_GROUP_CURSOR',
-    14: 'RT_GROUP_ICON',
-    16: 'RT_VERSION',
-    17: 'RT_DLGINCLUDE',
-    19: 'RT_PLUGPLAY',
-    20: 'RT_VXD',
-    21: 'RT_ANICURSOR', 
-    22: 'RT_ANIICON',
-    23: 'RT_HTML',
-    24: 'RT_MANIFEST',
-}
 
 class PEInfoProcessor(ProcessorBase):
 
@@ -34,29 +12,48 @@ class PEInfoProcessor(ProcessorBase):
     default_options = { 'enabled': True, 'extract_resources': False }
     mimetypes = ['application/x-dosexec']
     
-    def traverse_directory(self, node, path=[]):
-        
+    def extract_structure(self, data, force=[]):
+
+        dictionary = {}
+
+        for key in data.__keys__:
+            keyname = key[0]
+            attr = getattr(data, keyname)
+            if isinstance(attr, (bytes, bytearray)):
+                attr = attr.decode('utf-8')
+            dictionary[normalize_name(keyname)] = attr
+
+        if force:
+            for key, default in force:
+                if key not in dictionary.keys():
+                    dictionary[normalize_name(key)] = default
+
+        return dictionary
+
+
+    def traverse_directory(self, node, path=[], timestamp = None):
+
         for entry in node.entries:
 
             new_path = path.copy()
 
             if hasattr(entry, 'directory'):
-                _path = RESOURCE_TYPES.get(entry.id, entry.id) if not path else entry.id
-                new_path.append(_path)
-                yield from self.traverse_directory(entry.directory, new_path.copy())
+                if len(path) == 0:
+                    timestamp = getattr(entry.directory, 'TimeDateStamp', None)
+                new_path.append(entry.id)
+                yield from self.traverse_directory(entry.directory, new_path.copy(), timestamp)
             elif hasattr(entry, 'data'):
 
                 resource = {
-                    'id': entry.id,
+                    'language': entry.id,
                     'name': entry.name.__str__() if entry.name else '',
                     'type': path[0],
                     'path': '/'.join([str(p) for p in path]),
                     'codepage': entry.data.struct.CodePage,
-                    'language': '@IMPLEMENTME',
                     'offset': entry.data.struct.OffsetToData,
                     'size': entry.data.struct.Size,
                     'reserved': entry.data.struct.Reserved,
-                    'timestamp': '@IMPLEMENTME',
+                    'timestamp': timestamp,
                 }
                 yield resource
 
@@ -64,11 +61,13 @@ class PEInfoProcessor(ProcessorBase):
         """Get Portable Executable (PE) files data"""
 
         try:
-            pe = pefile.PE(data=sample['data'], fast_load=True)
+            pe = pefile.PE(data=sample['data'], fast_load=False)
             pe.parse_data_directories( directories=[ 
                 pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_IMPORT'],
                 pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_EXPORT'],
                 pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_TLS'],
+                pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_DEBUG'],
+                pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG'],
                 pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_RESOURCE']])
 
             data = {}
@@ -80,18 +79,49 @@ class PEInfoProcessor(ProcessorBase):
                 'optional_header': pe.OPTIONAL_HEADER,
                 'nt_headers': pe.NT_HEADERS,
             }
-            for h_name, h_data in headers.items():
-                header_data = {}
-                for key in h_data.__keys__:
-                    keyname = key[0]
-                    attr = getattr(h_data, keyname)
-                    if isinstance(attr, (bytes, bytearray)):
-                        attr = attr.decode('utf-8')
-                    elif isinstance(attr, int):
-                        attr = hex(attr)
-                    header_data[normalize_name(keyname)] = attr
 
-                data[h_name] = header_data
+
+            for h_name, h_data in headers.items():
+
+                data[h_name] = self.extract_structure(h_data)
+
+            # Load Configuration
+            if hasattr(pe, 'DIRECTORY_ENTRY_LOAD_CONFIG'):
+                data['load_configuration'] = self.extract_structure(pe.DIRECTORY_ENTRY_LOAD_CONFIG.struct, force=[('TimeDateStamp',None)])
+
+            # Debug Information
+            if hasattr(pe, 'DIRECTORY_ENTRY_DEBUG'):
+                debug_entries = []
+                for debug_entry in pe.DIRECTORY_ENTRY_DEBUG:
+                    debug_entries.append(self.extract_structure(debug_entry.struct))
+
+                data['debug_information'] = debug_entries
+
+            # VS Version Information
+            if hasattr(pe, 'VS_VERSIONINFO') and hasattr(pe, 'FileInfo'):
+                version_info = {}
+                for entry in pe.FileInfo:
+                    if hasattr(entry[0], 'StringTable'):
+                        for st_entry in entry[0].StringTable:
+                            for st_entry_name, st_entry_value in st_entry.entries.items():
+
+                                st_entry_name = normalize_name(st_entry_name.decode('utf-8'))
+                                st_entry_value = st_entry_value.decode('utf-8')
+
+                                version_info[st_entry_name] = st_entry_value
+
+                data['version_information'] = version_info
+
+            # VS Fixed File Info
+            if hasattr(pe, 'VS_FIXEDFILEINFO'):
+                fixed_file_info = {}
+                for finfo in pe.VS_FIXEDFILEINFO:
+                    res = self.extract_structure(finfo)
+                    for rk, rv in res.items():
+                        fixed_file_info[rk] = rv.decode('utf-8') if isinstance(rv, (bytes, bytearray)) else rv
+
+                data['fixed_file_info'] = fixed_file_info
+
 
             # Get Architechture
             if pe.FILE_HEADER.Machine == 0x14C: # IMAGE_FILE_MACHINE_I386
@@ -115,7 +145,7 @@ class PEInfoProcessor(ProcessorBase):
                 elif (timestamp > datetime.datetime.utcnow().timestamp()):
                     self.add_tag('future-timestamp')
 
-            #check for ASLR, DEP/NX and SEH mitigations
+            # Check for ASLR, DEP/NX and SEH mitigations
             data['mitigations'] = {}
             if pe.OPTIONAL_HEADER.DllCharacteristics > 0:
                 if pe.OPTIONAL_HEADER.DllCharacteristics & 0x0040:
@@ -131,7 +161,8 @@ class PEInfoProcessor(ProcessorBase):
 
             # Check imports & imphash
             if hasattr(pe, 'DIRECTORY_ENTRY_IMPORT'):
-                #@IMPLEMENTME imphash
+                data['imphash'] = pe.get_imphash()
+
                 imports = {}
                 for lib in pe.DIRECTORY_ENTRY_IMPORT:
                     dll_name = lib.dll.decode('utf-8')
@@ -144,7 +175,31 @@ class PEInfoProcessor(ProcessorBase):
                 data['imports'] = imports
             
             # Check RICH header
-            # @IMPLEMENTME
+            rich = pe.parse_rich_header()
+            if rich:
+
+                rich_values = dict(zip_longest(*[iter(rich['values'])] * 2, fillvalue=""))
+
+                rich_header = {
+                    'xor_key': rich['checksum'],
+                    'compids': []
+                }
+
+                for compid, count in rich_values.items():
+
+                    comp_type = (compid >> 16)
+                    min_ver = (compid & 0xFFFF)
+
+                    comp = {
+                        'comp_id': compid,
+                        'type_id': comp_type,
+                        'min_ver': min_ver,
+                        'count': count
+                    }
+
+                    rich_header['compids'].append(comp)
+
+                data['rich_header'] = rich_header
 
             # Check exports
             if hasattr(pe, 'DIRECTORY_ENTRY_EXPORT'):

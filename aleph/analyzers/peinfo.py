@@ -6,6 +6,8 @@ IMPORT_MIN_MATCHES = 2
 EVIL_RES_SIZE_RATIO = 0.75
 EVIL_ENTROPY_THRESHOLD = 7
 
+RICH_COMPTYPE_TOTAL_IMPORTS = 0x001
+
 class PEInfoAnalyzer(AnalyzerBase):
 
     name = 'pe_static_analyzer'
@@ -333,6 +335,7 @@ class PEInfoAnalyzer(AnalyzerBase):
         {'rule': '\.y(P|0da)', 'description': 'This PE is packed with Y0da', 'severity': 'uncommon'},
     ]
 
+
     def analyze(self):
 
         if not 'pe_info' in self.artifacts.keys():
@@ -366,7 +369,8 @@ class PEInfoAnalyzer(AnalyzerBase):
             return False
         
         # Cryptocurrency wallet addresses on binaries are usually not good
-        if 'cryptocurrency_wallet' in self.artifacts['strings']:
+        if 'cryptocurrency_wallet' in self.artifacts['strings'].keys() and \
+            len(self.artifacts['strings']['cryptocurrency_wallet']) > 0:
 
             wallet_addrs = ', '.join(self.artifacts['strings']['cryptocurrency_wallet'])
 
@@ -469,6 +473,7 @@ class PEInfoAnalyzer(AnalyzerBase):
 
     def check_evil_imports(self):
 
+
         if 'imports' not in self.artifacts['pe_info']:
             return False
 
@@ -499,3 +504,15 @@ class PEInfoAnalyzer(AnalyzerBase):
                     info['severity']
                 )
 
+        # Check if total imports match RICH Header's 'Total Imports'
+        if 'rich_header' in self.artifacts['pe_info']:
+            for comp in self.artifacts['pe_info']['rich_header']['compids']:
+                if comp['type_id'] == RICH_COMPTYPE_TOTAL_IMPORTS:
+                    if int(comp['count']) != len(import_list):
+                        self.add_indicator('rich_import_mismatch')
+                        self.add_flag(
+                            'This sample is packed or was manually edited',
+                            'The number of imported functions (%d) is different than reported on the RICH header (%d)' % (len(import_list), comp['count']), 
+                            'rich_header_mismatch', 
+                            'suspicious'
+                        )
