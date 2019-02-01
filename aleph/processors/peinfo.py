@@ -2,32 +2,66 @@ import pefile
 import datetime
 
 from aleph.common.base import ProcessorBase
+from aleph.common.utils import entropy, normalize_name
+
+RESOURCE_TYPES = {
+    1: 'RT_CURSOR',
+    2: 'RT_BITMAP',
+    3: 'RT_ICON',
+    4: 'RT_MENU',
+    5: 'RT_DIALOG',
+    6: 'RT_STRING',
+    7: 'RT_FONTDIR',
+    8: 'RT_FONT',
+    9: 'RT_ACCELERATOR', 
+    10: 'RT_RCDATA',
+    11: 'RT_MESSAGETABLE',
+    12: 'RT_GROUP_CURSOR',
+    14: 'RT_GROUP_ICON',
+    16: 'RT_VERSION',
+    17: 'RT_DLGINCLUDE',
+    19: 'RT_PLUGPLAY',
+    20: 'RT_VXD',
+    21: 'RT_ANICURSOR', 
+    22: 'RT_ANIICON',
+    23: 'RT_HTML',
+    24: 'RT_MANIFEST',
+}
 
 class PEInfoProcessor(ProcessorBase):
 
     name = 'pe_info'
+    default_options = { 'enabled': True, 'extract_resources': False }
     mimetypes = ['application/x-dosexec']
+    
+    def traverse_directory(self, node, path=[]):
+        
+        for entry in node.entries:
+
+            new_path = path.copy()
+
+            if hasattr(entry, 'directory'):
+                _path = RESOURCE_TYPES.get(entry.id, entry.id) if not path else entry.id
+                new_path.append(_path)
+                yield from self.traverse_directory(entry.directory, new_path.copy())
+            elif hasattr(entry, 'data'):
+
+                resource = {
+                    'id': entry.id,
+                    'name': entry.name.__str__() if entry.name else '',
+                    'type': path[0],
+                    'path': '/'.join([str(p) for p in path]),
+                    'codepage': entry.data.struct.CodePage,
+                    'language': '@IMPLEMENTME',
+                    'offset': entry.data.struct.OffsetToData,
+                    'size': entry.data.struct.Size,
+                    'reserved': entry.data.struct.Reserved,
+                    'timestamp': '@IMPLEMENTME',
+                }
+                yield resource
 
     def process(self, sample):
-        """Get Portable Executable (PE) files data
-
-        Return example:
-
-        {   'aslr': True,
-            'dep': True,
-            'seh': True,
-            'architechture': '32-bit',
-            'compilation_date': '2009-12-05 22:50:46',
-            'compilation_timestamp': 1260053446,
-            'number_sections': 5,
-            'exports': [{'ordinal': 1, 'name': 'DriverProc', 'address': '0x1c202070'}, { ... } ],
-            'imports': { 'LIB': [ { 'address': '0x407000', 'name': 'function'}, ... ], ... },
-            'sections': [ { 'address': '0x1000', 'name': '.text','raw_size': 23552,'virtual_size': '0x5a5a'}, {  ... } ]
-        }
-
-        """
-
-        tags = []
+        """Get Portable Executable (PE) files data"""
 
         try:
             pe = pefile.PE(data=sample['data'], fast_load=True)
@@ -39,15 +73,31 @@ class PEInfoProcessor(ProcessorBase):
 
             data = {}
 
+            # Basic Headers
+            headers = {
+                'dos_header': pe.DOS_HEADER,
+                'pe_header': pe.FILE_HEADER,
+                'optional_header': pe.OPTIONAL_HEADER,
+                'nt_headers': pe.NT_HEADERS,
+            }
+            for h_name, h_data in headers.items():
+                header_data = {}
+                for key in h_data.__keys__:
+                    keyname = key[0]
+                    attr = getattr(h_data, keyname)
+                    if isinstance(attr, (bytes, bytearray)):
+                        attr = attr.decode('utf-8')
+                    elif isinstance(attr, int):
+                        attr = hex(attr)
+                    header_data[normalize_name(keyname)] = attr
+
+                data[h_name] = header_data
+
             # Get Architechture
             if pe.FILE_HEADER.Machine == 0x14C: # IMAGE_FILE_MACHINE_I386
-                data['architechture'] = '32-bit'
                 self.add_tag('i386')
             elif pe.FILE_HEADER.Machine == 0x8664: # IMAGE_FILE_MACHINE_AMD64
-                data['architechture'] = '64-bit'
                 self.add_tag('amd64')
-            else:
-                data['architechture'] = 'N/A'
 
             # Executable Type
             self.add_tag('dll' if pe.is_dll() else 'exe')
@@ -60,43 +110,41 @@ class PEInfoProcessor(ProcessorBase):
             if timestamp == 0:
                 self.add_tag('no-timestamp')
             else:
-                data['compilation_timestamp'] = timestamp
-                data['compilation_date'] = datetime.datetime.utcfromtimestamp(int(timestamp)).strftime('%Y-%m-%d %H:%M:%S')
                 if (timestamp < 946692000): #@FIXME use constants or variables with meaningful names instead
                     self.add_tag('old-timestamp')
                 elif (timestamp > datetime.datetime.utcnow().timestamp()):
                     self.add_tag('future-timestamp')
 
-            data['entry_point'] = pe.OPTIONAL_HEADER.AddressOfEntryPoint
-            data['image_base']  = pe.OPTIONAL_HEADER.ImageBase
-            data['number_sections'] = pe.FILE_HEADER.NumberOfSections
-
-            #check for ASLR, DEP/NX and SEH
+            #check for ASLR, DEP/NX and SEH mitigations
+            data['mitigations'] = {}
             if pe.OPTIONAL_HEADER.DllCharacteristics > 0:
                 if pe.OPTIONAL_HEADER.DllCharacteristics & 0x0040:
-                    data['aslr'] = True
+                    data['mitigations']['aslr'] = True
                 if pe.OPTIONAL_HEADER.DllCharacteristics & 0x0100:
-                    data['dep'] = True
+                    data['mitigations']['dep'] = True
                 if (pe.OPTIONAL_HEADER.DllCharacteristics & 0x0400
                 or (hasattr(pe, "DIRECTORY_ENTRY_LOAD_CONFIG") 
                 and pe.DIRECTORY_ENTRY_LOAD_CONFIG.struct.SEHandlerCount > 0 
                 and pe.DIRECTORY_ENTRY_LOAD_CONFIG.struct.SEHandlerTable != 0) 
                 or pe.FILE_HEADER.Machine == 0x8664):
-                    data['seh'] = True
+                    data['mitigations']['seh'] = True
 
-            # Check imports
+            # Check imports & imphash
             if hasattr(pe, 'DIRECTORY_ENTRY_IMPORT'):
-                imports = []
+                #@IMPLEMENTME imphash
+                imports = {}
                 for lib in pe.DIRECTORY_ENTRY_IMPORT:
-                    importset = {'dllname': lib.dll.decode('utf-8'), 'imports': []}
+                    dll_name = lib.dll.decode('utf-8')
+                    imports[dll_name] = []
 
                     for imp in lib.imports:
                         if (imp.name != None) and (imp.name != ""):
-                            importset['imports'].append({'address': hex(imp.address), 'name': imp.name.decode('utf-8')})
+                            imports[dll_name].append({'address': hex(imp.address), 'name': imp.name.decode('utf-8')})
                             
-                    imports.append(importset)
-
                 data['imports'] = imports
+            
+            # Check RICH header
+            # @IMPLEMENTME
 
             # Check exports
             if hasattr(pe, 'DIRECTORY_ENTRY_EXPORT'):
@@ -112,8 +160,28 @@ class PEInfoProcessor(ProcessorBase):
             if len(pe.sections) > 0:
                 data['sections'] = []
                 for section in pe.sections:
-                    data['sections'].append({'name': section.Name.decode('utf-8').strip('\u0000'), 'address': hex(section.VirtualAddress), 'virtual_size': hex(section.Misc_VirtualSize), 'raw_size': section.SizeOfRawData })
-            
+                    data['sections'].append(
+                        {
+                            'name': section.Name.decode('utf-8').strip('\u0000'), 
+                            'address': hex(section.VirtualAddress), 
+                            'virtual_size': hex(section.Misc_VirtualSize), 
+                            'raw_size': section.SizeOfRawData,
+                            'characteristics': hex(section.Characteristics),
+                            'entropy': section.get_entropy(),
+                        })
+
+            # Get resources
+            if hasattr(pe, 'DIRECTORY_ENTRY_RESOURCE'):
+                data['resources'] = []
+                for resource in self.traverse_directory(pe.DIRECTORY_ENTRY_RESOURCE):
+
+                    resource_data = pe.get_memory_mapped_image()[resource['offset']:resource['offset']+resource['size']]
+                    resource['entropy'] = entropy(resource_data)
+                    data['resources'].append(resource)
+
+                    if self.options.get('extract_resources'):
+                        self.dispatch(resource_data, parent=sample['id'], filename=resource['path'])
+
             return data
                             
         except Exception as e:

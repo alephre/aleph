@@ -6,6 +6,7 @@ from aleph.config.constants import MIMETYPES_ARCHIVE
 
 # Some of the Regex below were taken from https://github.com/viper-framework/viper/blob/master/viper/modules/strings.py
 
+BITCOIN_WALLET_REGEX = re.compile(r'(?:[13][a-km-zA-HJ-NP-Z1-9]{25,34})')
 DOMAIN_REGEX = re.compile(r'([a-z0-9][a-z0-9\-]{0,61}[a-z0-9]\.)+[a-z0-9][a-z0-9\-]*[a-z0-9]', re.IGNORECASE)
 IPV4_REGEX = re.compile(r'[1-2]?[0-9]?[0-9]\.[1-2]?[0-9]?[0-9]\.[1-2]?[0-9]?[0-9]\.[1-2]?[0-9]?[0-9]')
 IPV6_REGEX = re.compile(r'((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}'
@@ -48,7 +49,7 @@ class StringsProcessor(ProcessorBase):
         self.classifiers['emails'] = (EMAIL_REGEX,)
         self.classifiers['http_headers'] = (HOST_REGEX, USERAGENT_REGEX, GET_POST_REGEX)
         self.classifiers['win32'] = (REGKEY_REGEX, REGKEY2_REGEX, PDB_REGEX)
-
+        self.classifiers['cryptocurrency_wallet'] = (BITCOIN_WALLET_REGEX,)
 
     def strings(self, data, min=4):
         result = ""

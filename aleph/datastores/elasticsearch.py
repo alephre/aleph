@@ -1,6 +1,8 @@
 from elasticsearch import Elasticsearch
 from aleph.common.base import DatastoreBase
 
+DEFAULT_TIMEOUT=30
+
 class ElasticsearchDatastore(DatastoreBase):
 
     default_options = {
@@ -23,9 +25,15 @@ class ElasticsearchDatastore(DatastoreBase):
 
     def retrieve(self, sample_id):
         self.logger.debug("Retrieving metadata for %s" % sample_id)
-        result = self.engine.get(index=self.options.get('index'), doc_type=self.options.get('doctype'), id=sample_id)['_source']
+        result = self.engine.get(index=self.options.get('index'), doc_type=self.options.get('doctype'), id=sample_id)
         self.logger.debug("Metadata retrieved for %s" % sample_id)
-        return result
+
+        if not result:
+            return None
+
+        metadata = result['_source']
+
+        return metadata
 
     def store(self, sample_id, document):
 
@@ -48,6 +56,8 @@ class ElasticsearchDatastore(DatastoreBase):
             'processors_completed': [],
             'analyzers_dispatched': [],
             'analyzers_completed': [],
+            'known_filenames': [],
+            'parents': [],
         }
 
         # Merge document with defaults for upsert case
@@ -125,5 +135,6 @@ class ElasticsearchDatastore(DatastoreBase):
             id=sample_id,
             index=self.options.get('index'), 
             doc_type=self.options.get('doctype'),
-            body=document_body
+            body=document_body,
+            request_timeout=DEFAULT_TIMEOUT
             )
