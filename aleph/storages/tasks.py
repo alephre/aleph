@@ -11,18 +11,27 @@ STORAGES = [(name, load_storage(name)(options)) for name, options in settings.ge
 def store(self, sample_id, sample_data, enqueue=True):
 
     for name, storage in STORAGES:
-        self.logger.info("Storing %s to %s storage" % (sample_id, name))
-        storage.store(sample_id, decode_data(sample_data))
-        self.logger.debug("Sample %s stored to %s storage" % (sample_id, name))
+        try:
+            self.logger.info("Storing %s to %s storage" % (sample_id, name))
+            storage.store(sample_id, decode_data(sample_data))
+            self.logger.debug("Sample %s stored to %s storage" % (sample_id, name))
+        except Exception as e:
+            self.logger.error('Error on %s storage: %s' % (name, str(e)))
+            continue
+
 
 @app.task(bind=True)
 def retrieve(self, sample_id):
 
     for name, storage in STORAGES:
-        self.logger.info("Retrieving %s from %s storage" % (sample_id, name))
-        sample = storage.retrieve(sample_id)
-        if sample:
-            break
-        self.logger.debug("Sample %s retrieved from %s storage" % (sample_id, name))
+        try:
+            self.logger.info("Retrieving %s from %s storage" % (sample_id, name))
+            sample = storage.retrieve(sample_id)
+            if sample:
+                break
+            self.logger.debug("Sample %s retrieved from %s storage" % (sample_id, name))
+        except Exception as e:
+            self.logger.error('Error on %s storage: %s' % (name, str(e)))
+            continue
 
     return encode_data(sample)

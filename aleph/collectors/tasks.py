@@ -9,7 +9,11 @@ def collect(self):
 
     for name, collector in COLLECTORS:
         self.logger.info("Running %s collector" % name)
-        collector.collect()
+        try:
+            collector.collect()
+        except Exception as e:
+            self.logger.error('Error on %s collector: %s' % (name, str(e)))
+            continue
         self.logger.debug("Collector %s completed" % name)
 
     self.logger.debug("Collection routine finished")

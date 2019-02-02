@@ -8,7 +8,7 @@ from celery import Task
 from celery.utils.log import get_task_logger
 
 from aleph.config import ConfigManager, settings
-from aleph.common.utils import encode_data, decode_data, call_task
+from aleph.common.utils import encode_data, decode_data, call_task, to_es_date
 
 class TaskBase(Task):
 
@@ -83,7 +83,7 @@ class ComponentBase(object):
 
     def dispatch(self, data, metadata={}, filename=None, parent=None):
 
-        metadata['timestamp'] = datetime.utcnow().timestamp()
+        metadata['timestamp'] = to_es_date(datetime.utcnow())
 
         metadata['known_filenames'] = [filename,]
         metadata['parents'] = [parent,]

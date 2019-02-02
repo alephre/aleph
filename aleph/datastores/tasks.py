@@ -17,8 +17,12 @@ def update_task_states(self):
 def store(self, sample_id, metadata):
 
     for name, datastore in DATASTORES:
-        self.logger.info("Storing metadata for %s on datastore" % sample_id)
-        datastore.store(sample_id, metadata)
-        self.logger.debug("Metadata for %s stored on datastore" % sample_id)
+        try:
+            self.logger.info("Storing metadata for %s on datastore" % sample_id)
+            datastore.store(sample_id, metadata)
+            self.logger.debug("Metadata for %s stored on datastore" % sample_id)
+        except Exception as e:
+            self.logger.error('Error on %s datastore: %s' % (name, str(e)))
+            continue
 
     self.logger.debug("Datastore storage routine finished")

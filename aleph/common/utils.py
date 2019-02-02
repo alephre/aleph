@@ -119,3 +119,9 @@ def call_task(task_name, args, routing_key='celery'):
         app.send_task(task_name, args=args, routing_key=routing_key)
     except Exception as e:
         logger.error("Error dispatching task %s: %s" % (task_name, str(e)))
+
+def to_es_date(d):
+    s = d.strftime('%Y-%m-%dT%H:%M:%S.')
+    s += '%03d' % int(round(d.microsecond / 1000.0))
+    s += d.strftime('%z')
+    return s
