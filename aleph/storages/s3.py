@@ -52,7 +52,7 @@ class S3Storage(StorageBase):
 
         self.engine = self.session.resource('s3')
 
-        if not self.engine.Bucket(self.options.get('bucket')) in self.engine.buckets.all():
-            self.logger.error('S3 Storage bucket does not exist: %s' % self.options.get('bucked'))
+        if not self.engine.Bucket(self.options.get('bucket')) in [bucket.name for bucket in self.engine.buckets.all()]:
+            self.logger.error('S3 Storage bucket does not exist: %s' % self.options.get('bucket'))
             return False
 
