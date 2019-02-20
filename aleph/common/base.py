@@ -173,17 +173,21 @@ class AnalyzerBase(PluginBase):
     def has_indicators(self, indicators):
         return set(indicators).issubset(self.indicators)
     
-    def add_flag(self, flag_title, flag_text, category, severity, evil_rating = None):
+    def add_flag(self, flag_title, flag_text, category, severity, evil_rating = None, mitre_attack_id = []):
 
         if severity not in self.weights.keys():
             raise KeyError('Invalid severity: %s' % severity)
+
+        if not isinstance(mitre_attack_id, list):
+            raise ValueError('MITRE ATT&CK IDs must be supplied in a list')
 
         flag = {
             'title': flag_title,
             'text': flag_text,
             'category': category,
             'severity': severity,
-            'evil_rating': evil_rating if evil_rating else self.weights[severity]
+            'evil_rating': evil_rating if evil_rating else self.weights[severity],
+            'mitre_attack_id': mitre_attack_id
         }
 
         self.flags.append(flag)

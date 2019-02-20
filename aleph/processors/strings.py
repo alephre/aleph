@@ -6,7 +6,16 @@ from aleph.config.constants import MIMETYPES_ARCHIVE
 
 # Some of the Regex below were taken from https://github.com/viper-framework/viper/blob/master/viper/modules/strings.py
 
-BITCOIN_WALLET_REGEX = re.compile(r'(?:[13][a-km-zA-HJ-NP-Z1-9]{25,34})')
+CRYPTO_WALLET_BITCOIN = re.compile("^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$")
+CRYPTO_WALLET_BITCOIN_CASH = re.compile("^[13][a-km-zA-HJ-NP-Z1-9]{33}$")
+CRYPTO_WALLET_ETHEREUM = re.compile("^0x[a-fA-F0-9]{40}$")
+CRYPTO_WALLET_LITECOIN = re.compile("^[LM3][a-km-zA-HJ-NP-Z1-9]{26,33}$")
+CRYPTO_WALLET_DOGECOIN = re.compile("^D{1}[5-9A-HJ-NP-U]{1}[1-9A-HJ-NP-Za-km-z]{32}$")
+CRYPTO_WALLET_DASH = re.compile("^X[1-9A-HJ-NP-Za-km-z]{33}$")
+CRYPTO_WALLET_MONERO = re.compile("^4[0-9AB][1-9A-HJ-NP-Za-km-z]{93}$")
+CRYPTO_WALLET_NEO = re.compile("^A[0-9a-zA-Z]{33}$")
+CRYPTO_WALLET_RIPPLE = re.compile("^r[0-9a-zA-Z]{33}$")
+
 DOMAIN_REGEX = re.compile(r'([a-z0-9][a-z0-9\-]{0,61}[a-z0-9]\.)+[a-z0-9][a-z0-9\-]*[a-z0-9]', re.IGNORECASE)
 IPV4_REGEX = re.compile(r'[1-2]?[0-9]?[0-9]\.[1-2]?[0-9]?[0-9]\.[1-2]?[0-9]?[0-9]\.[1-2]?[0-9]?[0-9]')
 IPV6_REGEX = re.compile(r'(::|(([a-fA-F0-9]{1,4}):){7}(([a-fA-F0-9]{1,4}))|(:(:([a-fA-F0-9]{1,4})){1,6})|((([a-fA-F0-9]{1,4}):){1,6}:)|((([a-fA-F0-9]{1,4}):)(:([a-fA-F0-9]{1,4})){1,6})|((([a-fA-F0-9]{1,4}):){2}(:([a-fA-F0-9]{1,4})){1,5})|((([a-fA-F0-9]{1,4}):){3}(:([a-fA-F0-9]{1,4})){1,4})|((([a-fA-F0-9]{1,4}):){4}(:([a-fA-F0-9]{1,4})){1,3})|((([a-fA-F0-9]{1,4}):){5}(:([a-fA-F0-9]{1,4})){1,2}))', re.IGNORECASE | re.S)
@@ -37,7 +46,16 @@ class StringsProcessor(ProcessorBase):
         self.classifiers['emails'] = (EMAIL_REGEX,)
         self.classifiers['http_headers'] = (HOST_REGEX, USERAGENT_REGEX, GET_POST_REGEX)
         self.classifiers['win32'] = (REGKEY_REGEX, REGKEY2_REGEX, PDB_REGEX)
-        self.classifiers['cryptocurrency_wallet'] = (BITCOIN_WALLET_REGEX,)
+        self.classifiers['cryptocurrency_wallet'] = (
+            CRYPTO_WALLET_BITCOIN, 
+            CRYPTO_WALLET_BITCOIN_CASH,
+            CRYPTO_WALLET_ETHEREUM,
+            CRYPTO_WALLET_LITECOIN,
+            CRYPTO_WALLET_DOGECOIN,
+            CRYPTO_WALLET_DASH,
+            CRYPTO_WALLET_MONERO,
+            CRYPTO_WALLET_NEO,
+            )
 
     def strings(self, data, min=4):
         result = ""

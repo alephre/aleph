@@ -1,6 +1,7 @@
 import re
 
 from aleph.common.base import AnalyzerBase
+from aleph.helpers.mitre_attack import *
 
 IMPORT_MIN_MATCHES = 2
 EVIL_RES_SIZE_RATIO = 0.75
@@ -30,6 +31,7 @@ class PEInfoAnalyzer(AnalyzerBase):
                 'SwitchToThread',
                 'NtQueryInformationProcess'
             ],
+            'mitre_attack_id': [ MA_SECURITY_SOFTWARE_DISCOVERY ],
         },
         'vanilla_injection': {
             'description': 'Imports functions commonly used on vanilla code injection techniques',
@@ -40,9 +42,10 @@ class PEInfoAnalyzer(AnalyzerBase):
                 'CreateRemoteThread(Ex)?',
                 '(Nt)?OpenProcess',
             ],
+            'mitre_attack_id': [ MA_PROCESS_INJECTION ],
         },
-        'process_holinfoing': {
-            'description': 'Imports functions commonly used on process holinfoing code injection techniques',
+        'process_hollowing': {
+            'description': 'Imports functions commonly used on process hollowiing code injection techniques',
             'severity': 'uncommon',
             'rules': [
                 '(Nt)?WriteProcessMemory',
@@ -51,6 +54,7 @@ class PEInfoAnalyzer(AnalyzerBase):
                 '(Nt)?ResumeThread',
                 '(Nt)?SetContextThread',
             ],
+            'mitre_attack_id': [ MA_PROCESS_HOLLOWING ],
         },
         'power_loader': {
             'description': 'Imports functions commonly used on power loader code injection techniques',
@@ -59,6 +63,7 @@ class PEInfoAnalyzer(AnalyzerBase):
             'FindWindow(A|W)',
             'GetWindowLong(A|W)'
             ],
+            'mitre_attack_id': [ MA_EXTRA_WINDOW_MEMORY_INJECTION ],
         },
         'atom_bombing': {
             'description': 'Imports functions commonly used on atom bombing code injection techniques',
@@ -68,6 +73,7 @@ class PEInfoAnalyzer(AnalyzerBase):
                 'GlobalGetAtomName(A|W)'
                 'QueueUserAPC',
             ],
+            'mitre_attack_id': [ MA_PROCESS_INJECTION ],
         },
         'process_doppelganging': {
             'description': 'Imports functions commonly used on process doppelganging code injection techniques',
@@ -78,6 +84,7 @@ class PEInfoAnalyzer(AnalyzerBase):
                 'RollbackTransaction',
                 '(Nt)?WriteFile',
             ],
+            'mitre_attack_id': [ MA_PROCESS_DOPPELGANGING ],
         },
         'keylogger_api': {
             'description': 'Imports functions commonly used by keyloggers',
@@ -91,6 +98,7 @@ class PEInfoAnalyzer(AnalyzerBase):
                 'CallNextHook(Ex)?',
                 'MapVirtualKey(A|W|Ex)',
             ],
+            'mitre_attack_id': [ MA_HOOKING ],
         },
         'raw_socket_api': {
             'description': 'Imports functions to handle raw sockets',
@@ -104,6 +112,7 @@ class PEInfoAnalyzer(AnalyzerBase):
                 'gethost(by)?name',
                 'inet_addr',
             ],
+            'mitre_attack_id': [ MA_EXFIL_NETWORK ],
         },
         'http_api': {
             'description': 'Imports functions for HTTP communication',
@@ -114,6 +123,7 @@ class PEInfoAnalyzer(AnalyzerBase):
                 'URL(Download|Open).*',
                 'WinHttp.*',
             ],
+            'mitre_attack_id': [ MA_EXFIL_NETWORK ],
         },
         'crypto_api': {
             'description': 'Imports functions from the Windows Cryptographic API',
@@ -125,7 +135,9 @@ class PEInfoAnalyzer(AnalyzerBase):
                 '(B|N)Crypt.*',
                 'Ssl.*',
             ],
+            'mitre_attack_id': [ MA_DATA_ENCRYPTED ],
         },
+        # @FIXME Separate into query/modify so we can have different ATT&CK IDs
         'registry_api': {
             'description': 'Imports functions that alter the Windows Registry',
             'severity': 'info',
@@ -136,6 +148,7 @@ class PEInfoAnalyzer(AnalyzerBase):
                 'SHQueryValueEx(A|W)',
                 'SHGetValue(A|W)',
             ],
+            'mitre_attack_id': [ MA_REG_QUERY ],
         },
         'process_creation_api': {
             'description': 'Imports functions commonly used to create processes',
@@ -147,29 +160,46 @@ class PEInfoAnalyzer(AnalyzerBase):
                 'WinExec',
                 'ShellExecute(A|W)',
             ],
+            'mitre_attack_id': [ MA_EXECUTION_API ],
         },
-        'process_manipulation_api': {
-            'description': 'Imports functions commonly used for manipulating processes',
+        'process_enumeration_api': {
+            'description': 'Imports functions commonly used for enumerating processes',
             'severity': 'suspicious',
             'min_match': 1,
             'rules': [
                 'EnumProcess.*',
-                '(Nt)?OpenProcess',
-                '(Nt)?(Read|Write)ProcessMemory',
                 'Process32(First|Next)(A|W)?',
             ],
+            'mitre_attack_id': [ MA_PROCESS_DISCOVERY ],
+        },
+        'service_discovery_api': {
+            'description': 'Imports functions commonly used on Windows Services discovery',
+            'severity': 'uncommon',
+            'rules': [
+                'OpenSCManager(A|W)',
+                'QueryService.*',
+                'EnumServicesStatus(Ex)?(A|W)',
+            ],
+            'mitre_attack_id': [ MA_SYSTEM_SERVICE_DISCOVERY ],
         },
         'service_manipulation_api': {
             'description': 'Imports functions commonly used on Windows Services manipulation',
             'severity': 'uncommon',
             'rules': [
-                'OpenSCManager(A|W)',
-                '(Open|Control|Create|Delete)Service(A|W)?',
-                'QueryService.*',
+                '(Open|Control|Delete)Service(A|W)?',
                 'ChangeServiceConfig(A|W)',
-                'EnumServicesStatus(Ex)?(A|W)',
             ],
+            'mitre_attack_id': [ MA_MODIFY_EXISTING_SERVICE ],
         },
+        'service_creation_api': {
+            'description': 'Imports functions commonly used on Windows Services creation',
+            'severity': 'uncommon',
+            'rules': [
+                'CreateService(A|W)?',
+            ],
+            'mitre_attack_id': [ MA_NEW_SERVICE ],
+        },
+
         'privilege_api': {
             'description': 'Imports functions commonly used on privilege escalation',
             'severity': 'suspicious',
@@ -184,6 +214,7 @@ class PEInfoAnalyzer(AnalyzerBase):
                 '(Zw)?DuplicateToken(Ex)?',
                 '(SHTest|Check)TokenMembership',
             ],
+            'mitre_attack_id': [ MA_ACCESS_TOKEN_MANIP ],
         },
         'dacl_api': {
             'description': 'Imports DACL functions, used to change security attributes from objects',
@@ -194,6 +225,7 @@ class PEInfoAnalyzer(AnalyzerBase):
                 'SetNamedSecurityInfo(A|W)'
                 'SetSecurityInfo',
             ],
+            'mitre_attack_id': [ MA_FILE_PERMISSIONS_MODIFY ],
         },
         'dynamic_import': {
             'description': 'Imports functions that load libraries dynamically',
@@ -205,14 +237,7 @@ class PEInfoAnalyzer(AnalyzerBase):
                 'LdrLoadDll',
                 'MmGetSystemRoutineAddress',
             ],
-        },
-        'packer_api': {
-            'description': 'Imports functions commonly used on packers',
-            'severity': 'info',
-            'rules': [
-                '(Nt)?VirtualAlloc(Ex)?',
-                '(Nt)?VirtualProtect(Ex)?',
-            ],
+            'mitre_attack_id': [],
         },
         'temporary_files': {
             'description': 'Imports functions to create temporary files',
@@ -221,6 +246,7 @@ class PEInfoAnalyzer(AnalyzerBase):
                 'GetTempPath(A|W)',
                 '(Create|Write)File(A|W)',
             ],
+            'mitre_attack_id': [],
         },
         'hdd_enumeration': {
             'description': 'Imports functions commonly used to enumerate disk drives',
@@ -231,6 +257,7 @@ class PEInfoAnalyzer(AnalyzerBase):
                 'GetDriveType(A|W)',
                 'GetLogicalDriveStrings(A|W)',
             ],
+            'mitre_attack_id': [ MA_SYSTEM_INFO_DISCOVERY ],
         },
         'driver_enumeration': {
             'description': 'Imports functions commonly used to enumerate drivers',
@@ -240,6 +267,7 @@ class PEInfoAnalyzer(AnalyzerBase):
                 'EnumDeviceDrivers',
                 'GetDeviceDriver.*'
             ],
+            'mitre_attack_id': [ MA_SYSTEM_INFO_DISCOVERY ],
         },
         'eventlog_deletion': {
             'description': 'Imports functions used to delete Windows Event Logs',
@@ -249,6 +277,7 @@ class PEInfoAnalyzer(AnalyzerBase):
                 'EvtClearLog',
                 'ClearEventLog(A|W)',
             ],
+            'mitre_attack_id': [ MA_INDICATOR_REMOVAL_HOST ],
         },
         'screenshot_api': {
             'description': 'Imports functions commonly used to capture the device screen',
@@ -260,6 +289,7 @@ class PEInfoAnalyzer(AnalyzerBase):
                 'PrintWindow',
                 'BitBlt',
             ],
+            'mitre_attack_id': [ MA_SCREEN_CAPTURE ],
         },
         'audio_api': {
             'description': 'Imports functions from the Audio API that could be used to intercept conversations',
@@ -269,6 +299,7 @@ class PEInfoAnalyzer(AnalyzerBase):
                 'waveInOpen',
                 'DirectSoundCaptureCreate.*'
             ],
+            'mitre_attack_id': [ MA_AUDIO_CAPTURE ],
         },
         'shutdown_functions': {
             'description': 'Imports functions used to shutdown the OS',
@@ -279,6 +310,7 @@ class PEInfoAnalyzer(AnalyzerBase):
                 'LockWorkStation',
                 'ExitWindows(Ex)?',
             ],
+            'mitre_attack_id': [],
         },
         'networking_api': {
             'description': 'Imports functions that configures networking',
@@ -290,6 +322,7 @@ class PEInfoAnalyzer(AnalyzerBase):
                 'SetIp(Forward|Net|Statistics|TTL).*',
                 'SetPerTcp(6)?ConnectionEStats',
             ],
+            'mitre_attack_id': [],
         },
     }
 
@@ -372,7 +405,7 @@ class PEInfoAnalyzer(AnalyzerBase):
         if 'cryptocurrency_wallet' in self.artifacts['strings'].keys() and \
             len(self.artifacts['strings']['cryptocurrency_wallet']) > 0:
 
-            wallet_addrs = ', '.join(self.artifacts['strings']['cryptocurrency_wallet'])
+            wallet_addrs = ', '.join(set(self.artifacts['strings']['cryptocurrency_wallet']))
 
             self.add_indicator('string_cryptowallet_addr')
             self.add_flag(
@@ -389,12 +422,13 @@ class PEInfoAnalyzer(AnalyzerBase):
 
         for s in self.artifacts['pe_info']['sections']:
             if s['entropy'] >= EVIL_ENTROPY_THRESHOLD:
-                self.add_indicator('section_evil_entropy')
+                self.add_indicator('%s_section_evil_entropy' % s['name'])
                 self.add_flag(
                     'This sample may have encrypted or compressed data',
                     'Section %s has a suspicious entropy of %.4f' % (s['name'], s['entropy']),
                     'section_entropy', 
-                    'suspicious'
+                    'suspicious',
+                    mitre_attack_id = [MA_DATA_ENCRYPTED, MA_DATA_COMPRESSED]
                 )
 
     def check_resources(self):
@@ -403,18 +437,11 @@ class PEInfoAnalyzer(AnalyzerBase):
         if 'resources' not in self.artifacts['pe_info']:
             return False
 
+        total_resource_size = 0
+
         for r in self.artifacts['pe_info']['resources']:
 
-            r_size_ratio = (r['size'] / self.sample['metadata']['size'])
-
-            if r_size_ratio >= EVIL_RES_SIZE_RATIO:
-                self.add_indicator('resource_evil_size_ratio')
-                self.add_flag(
-                    'This sample may be a dropper',
-                    'Resource %s comprises %.2f%% of the binary' % (r['path'], (r_size_ratio*100)), 
-                    'resource_size_ratio',
-                    'suspicious'
-                )
+            total_resource_size += r['size']
 
             if r['entropy'] >= EVIL_ENTROPY_THRESHOLD:
                 self.add_indicator('resource_evil_entropy')
@@ -422,8 +449,22 @@ class PEInfoAnalyzer(AnalyzerBase):
                     'This sample may have encrypted or compressed resources',
                     'Resource %s has a suspicious entropy of %.4f' % (r['path'], r['entropy']),
                     'resource_entropy',
-                    'suspicious'
+                    'suspicious',
+                    mitre_attack_id = [MA_DATA_ENCRYPTED, MA_DATA_COMPRESSED]
                 )
+
+        r_size_ratio = (total_resource_size / self.sample['metadata']['size'])
+
+        if r_size_ratio >= EVIL_RES_SIZE_RATIO:
+            self.add_indicator('resource_section_evil_size_ratio')
+            self.add_flag(
+                'This sample may be a dropper',
+                'Resource section comprises %.2f%% of the binary' % (r_size_ratio*100), 
+                'resource_size_ratio',
+                'suspicious'
+            )
+
+
 
     def check_ransomware(self):
 
@@ -441,11 +482,11 @@ class PEInfoAnalyzer(AnalyzerBase):
 
     def check_dropper(self):
         
-        if self.has_indicators(['resource_evil_size_ratio','resource_evil_entropy']):
+        if self.has_indicators(['resource_section_evil_size_ratio','.rsrc_section_evil_entropy']):
             self.add_indicator('dropper')
             self.add_flag(
                 'This sample is likely a dropper',
-                'Sample has a high-entropy resource which comprises for most of the binary\'s size',
+                'Sample has a high-entropy resources section which comprises for most of the binary\'s size',
                 'dropper',
                 'malicious'
             )
@@ -465,7 +506,8 @@ class PEInfoAnalyzer(AnalyzerBase):
                         'This sample was packed',
                         check['description'],
                         'known_packer_sections',
-                        check['severity']
+                        check['severity'],
+                        mitre_attack_id = MA_SOFTWARE_PACKING
                     )
 
         if has_packer:
@@ -501,7 +543,8 @@ class PEInfoAnalyzer(AnalyzerBase):
                     'This sample contains functions commonly used by malware',
                     '%s: %s' % (info['description'], imp_names), 
                     'suspicious_imports', 
-                    info['severity']
+                    info['severity'],
+                    mitre_attack_id = info['mitre_attack_id']
                 )
 
         # Check if total imports match RICH Header's 'Total Imports'

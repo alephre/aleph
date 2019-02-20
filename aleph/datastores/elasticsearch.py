@@ -44,7 +44,7 @@ class ElasticsearchDatastore(DatastoreBase):
 
         # Remove list entries from main document
         for key, values in document.items():
-            if type(values) in [list, tuple] and 'artifacts' not in key:
+            if type(values) in [list, tuple] and key not in ['artifacts','flags']:
                 option_lists[key] = document[key]
             else:
                 treated_document[key] = document[key]
@@ -118,16 +118,19 @@ class ElasticsearchDatastore(DatastoreBase):
             params = {}
             params[array_name] = values
 
-            document_body = {
-                "scripted_upsert": True,
-                "script": {
-                    "source": "ctx._source.%s.addAll(params.%s)" % (array_name, array_name),
-                    "lang": "painless",
-                    "params": params
-                },
-            }
+            for value in values:
 
-            self._update(sample_id, document_body)
+                document_body = {
+                    "scripted_upsert": True,
+                    "script": {
+                        #"source": "ctx._source.%s.addAll(params.%s)" % (array_name, array_name),
+                        "source": "if (ctx._source.%s.contains(params.value)) { ctx.op = \"none\" } else { ctx._source.%s.add(params.value) }" % (array_name, array_name),
+                        "lang": "painless",
+                        "params": { "value": value }
+                    },
+                }
+
+                self._update(sample_id, document_body)
 
     def _update(self, sample_id, document_body):
 
