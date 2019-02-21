@@ -1,3 +1,8 @@
+# Aleph Artifact Inspection Pipeline
+This is the Aleph core. Responsible for processing samples and extracting artifacts and intelligence.
+
+[![CircleCI](https://circleci.com/bb/janseidl/aleph2/tree/master.svg?style=svg&circle-token=2adb3b96d890b4a256555e3bb5b8552e5efac0cc)](https://circleci.com/bb/janseidl/aleph2/tree/master)
+
 # Installing
 I'm running on a debian VM. Current install expects everything running locally but you can edit config.yaml to whatever you want.
 
