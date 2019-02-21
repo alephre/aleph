@@ -59,10 +59,10 @@ class StringsProcessor(ProcessorBase):
 
     def strings(self, data, min=4):
         result = ""
-        _data = data.decode('utf-8', 'ignore')
-        for c in _data:
-            if c in string.printable:
-                result += c
+        #_data = data.decode('utf-8', 'backslashreplace')
+        for c in data:
+            if chr(c) in string.printable:
+                result += chr(c)
                 continue
             if len(result) >= min:
                 yield result
@@ -73,7 +73,7 @@ class StringsProcessor(ProcessorBase):
     def process(self, sample):
 
         result = {
-            'uncategorized': []
+            'uncategorized': set()
         }
 
         strings_found = list(self.strings(sample['data']))
@@ -85,14 +85,15 @@ class StringsProcessor(ProcessorBase):
             for classifier, regexes in self.classifiers.items():
 
                 if classifier not in result:
-                    result[classifier] = []
+                    result[classifier] = set()
 
                 for regex in regexes:
                     if regex.search(s):
-                        result[classifier].append(s)
+                        result[classifier].add(s)
                         string_classified = True
 
             if not string_classified:
-                result['uncategorized'].append(s)
+                result['uncategorized'].add(s)
 
-        return result
+        # Convert sets to lists because JSON can't handle sets
+        return dict((k, list(v)) for k, v in result.items()) 
