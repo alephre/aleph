@@ -1,5 +1,7 @@
-import string
 import re
+import string
+
+from netaddr import IPNetwork
 
 from aleph.common.base import ProcessorBase
 from aleph.config.constants import MIMETYPES_ARCHIVE
@@ -17,18 +19,64 @@ CRYPTO_WALLET_NEO = re.compile("^A[0-9a-zA-Z]{33}$")
 CRYPTO_WALLET_RIPPLE = re.compile("^r[0-9a-zA-Z]{33}$")
 
 DOMAIN_REGEX = re.compile(r'([a-z0-9][a-z0-9\-]{0,61}[a-z0-9]\.)+[a-z0-9][a-z0-9\-]*[a-z0-9]', re.IGNORECASE)
-IPV4_REGEX = re.compile(r'[1-2]?[0-9]?[0-9]\.[1-2]?[0-9]?[0-9]\.[1-2]?[0-9]?[0-9]\.[1-2]?[0-9]?[0-9]')
+IPV4_REGEX = re.compile(r'''((?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))''', re.MULTILINE)
 IPV6_REGEX = re.compile(r'(::|(([a-fA-F0-9]{1,4}):){7}(([a-fA-F0-9]{1,4}))|(:(:([a-fA-F0-9]{1,4})){1,6})|((([a-fA-F0-9]{1,4}):){1,6}:)|((([a-fA-F0-9]{1,4}):)(:([a-fA-F0-9]{1,4})){1,6})|((([a-fA-F0-9]{1,4}):){2}(:([a-fA-F0-9]{1,4})){1,5})|((([a-fA-F0-9]{1,4}):){3}(:([a-fA-F0-9]{1,4})){1,4})|((([a-fA-F0-9]{1,4}):){4}(:([a-fA-F0-9]{1,4})){1,3})|((([a-fA-F0-9]{1,4}):){5}(:([a-fA-F0-9]{1,4})){1,2}))', re.IGNORECASE | re.S)
 
-PDB_REGEX = re.compile(r'\.pdb$', re.IGNORECASE)
-URL_REGEX = re.compile(r'(?#WebOrIP)((?#protocol)((http|https):\/\/)?(?#subDomain)(([a-zA-Z0-9]+\.(?#domain)[a-zA-Z0-9\-]+(?#TLD)(\.[a-zA-Z]+){1,2})|(?#IPAddress)((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])))+(?#Port)(:[1-9][0-9]*)?)+(?#Path)((\/((?#dirOrFileName)[a-zA-Z0-9_\-\%\~\+]+)?)*)?(?#extension)(\.([a-zA-Z0-9_]+))?(?#parameters)(\?([a-zA-Z0-9_\-]+\=[a-z-A-Z0-9_\-\%\~\+]+)?(?#additionalParameters)(\&([a-zA-Z0-9_\-]+\=[a-z-A-Z0-9_\-\%\~\+]+)?)*)?', re.U | re.IGNORECASE)
-GET_POST_REGEX = re.compile('(GET|POST) ')
-HOST_REGEX = re.compile('Host: ')
-USERAGENT_REGEX = re.compile(r'(Mozilla|curl|Wget|Opera)/.+\(.+\;.+\)', re.IGNORECASE)
+# Added CVE regex pattern
+CVE_REGEX = re.compile("(CVE-(19|20)\\d{2}-\\d{4,7})", re.I | re.S | re.M)
+
+# Make sure there is something before ".pdb"
+PDB_REGEX = re.compile(r'\w+\.pdb$', re.IGNORECASE)
+
+# matches more content than original URL_REGEX pattern (hxxps, https, ftpx)
+URL_REGEX = re.compile(r'''(?i)\b((?:(hxxps?|https?|ftps?)://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?]))''', re.VERBOSE | re.MULTILINE)
+
+# GET, POST, and Host: will always start at the beginning of the line in HTTP headers
+GET_POST_REGEX = re.compile('^(GET|POST)')
+HOST_REGEX = re.compile('^Host: ')
+USERAGENT_REGEX = re.compile(r'(Mozilla|curl|Wget|Opera|Safari|Edge|Lynx)/.+\(.+\;.+\)', re.IGNORECASE)
+
 EMAIL_REGEX = re.compile(r'([\w\d\-\.]+)@{1}(([\w\d\-]{1,67})|([\w\d\-]+\.[\w\d\-]{1,67}))\.(([a-zA-Z\d]{2,4})(\.[a-zA-Z\d]{2})?)', re.IGNORECASE)
+
 REGKEY_REGEX = re.compile('(HKEY_CLASSES_ROOT|HKEY_CURRENT_USER|HKEY_LOCAL_MACHINE|HKEY_USERS|HKEY_CURRENT_CONFIG|HKCR|HKCU|HKLM|HKU|HKCC)(/|\x5c\x5c)', re.IGNORECASE)
 REGKEY2_REGEX = re.compile(r'(CurrentVersion|Software\\Microsoft|Windows NT|Microsoft\\Interface)')
-FILE_REGEX = re.compile(r'\b([\w,%-.]+\.[A-Za-z]{3,4})\b', re.U | re.IGNORECASE)
+
+# Updated file regex with common file types to match more file types and .* files
+FILE_REGEX = re.compile(r'([a-zA-Z0-9\s_\\.\-\(\):])+(docx|doc|csv|pdf|xlsx|xls|rtf|txt|pptx|ppt|html|php|js|exe|dll|jar|zip|zipx|7z|rar|tar|gz|jpeg|jpg|gif|png|tiff|bmp|flv|swf)')
+
+# Match files that use double extensions to trick users such as Document.docx.exe or something
+FILE_REGEX_DOUBLE_EXTENSIONS = re.compile(r'([a-zA-Z0-9\s_\\.\-\(\):])+(pdf|rar|zip|doc\w?|xls\w?|ppt\w?|xml|txt|lnk|jpg|js|jsp|jar|java|dll|exe)\.(pdf|rar|zip|doc\w?|xls\w?|ppt\w?|xml|txt|lnk|jpg|js|jsp|jar|java|dll|exe)')
+
+# Hash patterns
+MD5_REGEX = re.compile("\\b[a-f0-9]{32}\\b", re.I | re.S | re.M)
+SHA1_REGEX = re.compile("\\b[a-f0-9]{40}\\b", re.I | re.S | re.M)
+SHA256_REGEX = re.compile("\\b[a-f0-9]{64}\\b", re.I | re.S | re.M)
+SHA512_REGEX = re.compile("\\b[a-f0-9]{128}\\b", re.I | re.S | re.M)
+SSDEEP_REGEX = re.compile("\\b\\d{2}:[A-Za-z0-9/+]{3,}:[A-Za-z0-9/+]{3,}\\b", re.I | re.S | re.M)
+
+# mac address pattern
+MAC_ADDR_REGEX = re.compile(r'\b(?i)(?:[0-9A-F]{2}[:-]){5}(?:[0-9A-F]{2})\b')
+
+
+# @TODO: figure out if we want to process internal IPs or use this whitelist to remove reserved IPs
+# whitelist = [{'net': IPNetwork('10.0.0.0/8'), 'org': 'Private per RFC 1918'},
+#        {'net': IPNetwork('172.16.0.0/12'), 'org': 'Private per RFC 1918'},
+#        {'net': IPNetwork('192.168.0.0/16'), 'org': 'Private per RFC 1918'},
+#        {'net': IPNetwork('0.0.0.0/8'), 'org': 'Invalid per RFC 1122'},
+#        {'net': IPNetwork('127.0.0.0/8'), 'org': 'Loopback per RFC 1122'},
+#        {'net': IPNetwork('169.254.0.0/16'), 'org': 'Link-local per RFC 3927'},
+#        {'net': IPNetwork('100.64.0.0/10'), 'org': 'Shared address space per RFC 6598'},
+#        {'net': IPNetwork('192.0.0.0/24'), 'org': 'IETF Protocol Assignments per RFC 6890'},
+#        {'net': IPNetwork('192.0.2.0/24'), 'org': 'Documentation and examples per RFC 6890'},
+#        {'net': IPNetwork('192.88.99.0/24'), 'org': 'IPv6 to IPv4 relay per RFC 3068'},
+#        {'net': IPNetwork('198.18.0.0/15'), 'org': 'Network benchmark tests per RFC 2544'},
+#        {'net': IPNetwork('198.51.100.0/24'), 'org': 'Documentation and examples per RFC 5737'},
+#        {'net': IPNetwork('203.0.113.0/24'), 'org': 'Documentation and examples per RFC 5737'},
+#        {'net': IPNetwork('224.0.0.0/4'), 'org': 'IP multicast per RFC 5771'},
+#        {'net': IPNetwork('240.0.0.0/4'), 'org': 'Reserved per RFC 1700'},
+#        {'net': IPNetwork('255.255.255.255/32'), 'org': 'Broadcast address per RFC 919'}]
+
+
 
 class StringsProcessor(ProcessorBase):
 
@@ -42,12 +90,15 @@ class StringsProcessor(ProcessorBase):
         self.classifiers['domains'] = (DOMAIN_REGEX,)
         self.classifiers['ips'] = (IPV4_REGEX, IPV6_REGEX)
         self.classifiers['urls'] = (URL_REGEX,)
-        self.classifiers['files'] = (FILE_REGEX,)
+        self.classifiers['hashes'] = (MD5_REGEX, SHA1_REGEX, SHA256_REGEX, SHA512_REGEX, SSDEEP_REGEX)
+        self.classifiers['cves'] = (CVE_REGEX,)
+        self.classifiers['files'] = (FILE_REGEX, FILE_REGEX_DOUBLE_EXTENSIONS)
         self.classifiers['emails'] = (EMAIL_REGEX,)
         self.classifiers['http_headers'] = (HOST_REGEX, USERAGENT_REGEX, GET_POST_REGEX)
         self.classifiers['win32'] = (REGKEY_REGEX, REGKEY2_REGEX, PDB_REGEX)
+        self.classifiers['mac'] = (MAC_ADDR_REGEX)
         self.classifiers['cryptocurrency_wallet'] = (
-            CRYPTO_WALLET_BITCOIN, 
+            CRYPTO_WALLET_BITCOIN,
             CRYPTO_WALLET_BITCOIN_CASH,
             CRYPTO_WALLET_ETHEREUM,
             CRYPTO_WALLET_LITECOIN,
@@ -56,6 +107,7 @@ class StringsProcessor(ProcessorBase):
             CRYPTO_WALLET_MONERO,
             CRYPTO_WALLET_NEO,
             )
+
 
     def strings(self, data, min=4):
         result = ""
@@ -69,6 +121,7 @@ class StringsProcessor(ProcessorBase):
             result = ""
         if len(result) >= min:  # catch result at EOF
             yield result
+
 
     def process(self, sample):
 
@@ -96,4 +149,4 @@ class StringsProcessor(ProcessorBase):
                 result['uncategorized'].add(s)
 
         # Convert sets to lists because JSON can't handle sets
-        return dict((k, list(v)) for k, v in result.items()) 
+        return dict((k, list(v)) for k, v in result.items())
