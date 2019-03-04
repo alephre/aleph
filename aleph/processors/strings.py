@@ -25,33 +25,37 @@ IPV6_REGEX = re.compile(r'(::|(([a-fA-F0-9]{1,4}):){7}(([a-fA-F0-9]{1,4}))|(:(:(
 # Added CVE regex pattern
 CVE_REGEX = re.compile("(CVE-(19|20)\\d{2}-\\d{4,7})", re.I | re.S | re.M)
 
-# Updated PDB regex to it includes some content more ".pdb"
+# Make sure there is something before ".pdb"
 PDB_REGEX = re.compile(r'\w+\.pdb$', re.IGNORECASE)
 
-# matches more content than original URL_REGEX pattern
+# matches more content than original URL_REGEX pattern (hxxps, https, ftpx)
 URL_REGEX = re.compile(r'''(?i)\b((?:(hxxps?|https?|ftps?)://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?]))''', re.VERBOSE | re.MULTILINE)
 
-# GET/POST will pretty much always start at the beginning of the line in HTTP headers, same with Host:
+# GET, POST, and Host: will always start at the beginning of the line in HTTP headers
 GET_POST_REGEX = re.compile('^(GET|POST)')
 HOST_REGEX = re.compile('^Host: ')
-USERAGENT_REGEX = re.compile(r'(Mozilla|curl|Wget|Opera|Safari|Edge)/.+\(.+\;.+\)', re.IGNORECASE)
+USERAGENT_REGEX = re.compile(r'(Mozilla|curl|Wget|Opera|Safari|Edge|Lynx)/.+\(.+\;.+\)', re.IGNORECASE)
 
-# Tuned email regex
 EMAIL_REGEX = re.compile(r'([\w\d\-\.]+)@{1}(([\w\d\-]{1,67})|([\w\d\-]+\.[\w\d\-]{1,67}))\.(([a-zA-Z\d]{2,4})(\.[a-zA-Z\d]{2})?)', re.IGNORECASE)
 
 REGKEY_REGEX = re.compile('(HKEY_CLASSES_ROOT|HKEY_CURRENT_USER|HKEY_LOCAL_MACHINE|HKEY_USERS|HKEY_CURRENT_CONFIG|HKCR|HKCU|HKLM|HKU|HKCC)(/|\x5c\x5c)', re.IGNORECASE)
 REGKEY2_REGEX = re.compile(r'(CurrentVersion|Software\\Microsoft|Windows NT|Microsoft\\Interface)')
 
-# Updated file regex with common file types
-FILE_REGEX = re.compile(r'\W([\w-]+\.)(docx|doc|csv|pdf|xlsx|xls|rtf|txt|pptx|ppt|html|php|js|exe|dll|jar|zip|zipx|7z|rar|tar|gz|jpeg|jpg|gif|png|tiff|bmp|flv|swf)')
-FILE_REGEX_DOUBLE_EXTENSIONS = re.compile(r'/\.(pdf|rar|zip|doc\w?|xls\w?|ppt\w?|xml|txt|lnk|jpg|js|jsp|jar|java|dll|exe)\.(pdf|rar|zip|doc\w?|xls\w?|ppt\w?|xml|txt|lnk|jpg|js|jsp|jar|java|dll|exe)')
-# ORIGINAL: FILE_REGEX = re.compile(r'\b([\w,%-.]+\.[A-Za-z]{3,4})\b', re.U | re.IGNORECASE)
+# Updated file regex with common file types to match more file types and .* files
+FILE_REGEX = re.compile(r'([a-zA-Z0-9\s_\\.\-\(\):])+(docx|doc|csv|pdf|xlsx|xls|rtf|txt|pptx|ppt|html|php|js|exe|dll|jar|zip|zipx|7z|rar|tar|gz|jpeg|jpg|gif|png|tiff|bmp|flv|swf)')
 
+# Match files that use double extensions to trick users such as Document.docx.exe or something
+FILE_REGEX_DOUBLE_EXTENSIONS = re.compile(r'([a-zA-Z0-9\s_\\.\-\(\):])+(pdf|rar|zip|doc\w?|xls\w?|ppt\w?|xml|txt|lnk|jpg|js|jsp|jar|java|dll|exe)\.(pdf|rar|zip|doc\w?|xls\w?|ppt\w?|xml|txt|lnk|jpg|js|jsp|jar|java|dll|exe)')
+
+# Hash patterns
 MD5_REGEX = re.compile("\\b[a-f0-9]{32}\\b", re.I | re.S | re.M)
 SHA1_REGEX = re.compile("\\b[a-f0-9]{40}\\b", re.I | re.S | re.M)
 SHA256_REGEX = re.compile("\\b[a-f0-9]{64}\\b", re.I | re.S | re.M)
 SHA512_REGEX = re.compile("\\b[a-f0-9]{128}\\b", re.I | re.S | re.M)
 SSDEEP_REGEX = re.compile("\\b\\d{2}:[A-Za-z0-9/+]{3,}:[A-Za-z0-9/+]{3,}\\b", re.I | re.S | re.M)
+
+# mac address pattern
+MAC_ADDR_REGEX = re.compile(r'\b(?i)(?:[0-9A-F]{2}[:-]){5}(?:[0-9A-F]{2})\b')
 
 
 # @TODO: figure out if we want to process internal IPs or use this whitelist to remove reserved IPs
@@ -88,10 +92,11 @@ class StringsProcessor(ProcessorBase):
         self.classifiers['urls'] = (URL_REGEX,)
         self.classifiers['hashes'] = (MD5_REGEX, SHA1_REGEX, SHA256_REGEX, SHA512_REGEX, SSDEEP_REGEX)
         self.classifiers['cves'] = (CVE_REGEX,)
-        self.classifiers['files'] = (FILE_REGEX,)
+        self.classifiers['files'] = (FILE_REGEX, FILE_REGEX_DOUBLE_EXTENSIONS)
         self.classifiers['emails'] = (EMAIL_REGEX,)
         self.classifiers['http_headers'] = (HOST_REGEX, USERAGENT_REGEX, GET_POST_REGEX)
         self.classifiers['win32'] = (REGKEY_REGEX, REGKEY2_REGEX, PDB_REGEX)
+        self.classifiers['mac'] = (MAC_ADDR_REGEX)
         self.classifiers['cryptocurrency_wallet'] = (
             CRYPTO_WALLET_BITCOIN,
             CRYPTO_WALLET_BITCOIN_CASH,
@@ -102,6 +107,7 @@ class StringsProcessor(ProcessorBase):
             CRYPTO_WALLET_MONERO,
             CRYPTO_WALLET_NEO,
             )
+
 
     def strings(self, data, min=4):
         result = ""
@@ -115,6 +121,7 @@ class StringsProcessor(ProcessorBase):
             result = ""
         if len(result) >= min:  # catch result at EOF
             yield result
+
 
     def process(self, sample):
 
