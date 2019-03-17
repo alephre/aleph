@@ -160,4 +160,3 @@ class EmailProcessor(ProcessorBase):
             string_ += line_
 
         return string_
-
