@@ -59,12 +59,12 @@ class EmailProcessor(ProcessorBase):
                 if hdr['value'] != item:
                     self.add_tag('possible_spoofing')
 
-    def traverse_multipart(self, msg, sample_id):
+    def get_attachments(self, msg, sample_id):
         """Recursively read multi-part email to get all attachments"""
 
         if msg.is_multipart():
             for part in msg.get_payload():
-                self.traverse_multipart(part)
+                self.get_attachment(part, sample_id)
         else:
             if 'Content-Disposition' in msg and msg.get_content_type() != 'text/plain':
                 file_name = msg.get_filename('')
