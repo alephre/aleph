@@ -42,7 +42,7 @@ class EmailProcessor(ProcessorBase):
 
         if msg.is_multipart():
             for part in msg.get_payload():
-                self.get_attachment(part, sample_id)
+                self.get_attachments(part, sample_id)
         else:
             if 'Content-Disposition' in msg and msg.get_content_type() != 'text/plain':
                 file_name = msg.get_filename('')
