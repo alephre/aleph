@@ -6,7 +6,6 @@
 # import email
 import uuid
 import poplib
-import imaplib
 
 from aleph.common.base import CollectorBase
 
@@ -20,11 +19,11 @@ class POPCollector(CollectorBase):
             conn = poplib.POP3_SSL(self.options.get('pop_server'), self.options.get('pop_port'))
             conn.user(self.options.get('pop_user'))
             conn.pass_(self.options.get('pop_password'))
-            self.logger.info('Connected to POP server {server}'.format(server=self.options.get('pop_server')))
+            self.logger.info('Connected to POP server {0}'.format(self.options.get('pop_server')))
 
         except Exception as err:
-            self.logger.error('Failed to connect to POP server: {err}'.format(err=err))
-            raise Exception('Failed to connect to POP server: {err}'.format(err=err))
+            self.logger.error('Failed to connect to POP server: {0}'.format(err))
+            pass
 
         # get message count
         total = 0
@@ -32,15 +31,21 @@ class POPCollector(CollectorBase):
         message_count, mailbox_size = conn.stat()
 
         if message_count > 1:
-            unread_count = mailbox_size - message_count
-            self.logger.debug('Fetching {0} unread messages ...'.format())
+            self.logger.debug('Fetching unread messages ...')
+
             for i in xrange(message_count, mailbox_size, -1):
                 try:
+                    # read message and set to SEEN
                     raw_data = conn.retr(i)
+
+                    # join at newlines to create readable email
                     msg_data = '\n'.join(raw_data[1])
+
+                    # push to pipeline for analysis
                     self.logger.debug('Inserting new email into the pipeline')
                     self.dispatch(msg_data, filename=str(uuid.uud4))
                     total += 1
+
                 except Exception as err:
                     self.logger.error('Unhandled error retreiving email messages: {0}'.format(str(err)))
 
@@ -50,8 +55,9 @@ class POPCollector(CollectorBase):
             conn.quit()
 
         else:
-            self.logger.info('No new email messages to retrieve {server}'.format(
-                    mailbox=self.options.get('pop_server')))
+            self.logger.info('No new email messages to retrieve {0}'.format(
+                self.options.get('pop_server')
+            ))
 
-                self.logger.debug('Closing POP connection')
-                conn.quit()
+            self.logger.debug('Closing POP connection')
+            conn.quit()
