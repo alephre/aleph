@@ -1,33 +1,37 @@
-import sys
-import traceback
-
+##
+# Custom exceptions for Aleph components
+# ---
+# try:
+#     do_processor_thing(foo)
+# except:
+#     raise ProcessorException('Failed to do thing')
+##
 
 class BaseException(Exception):
-    def __init__(self):
+    def __init__(self, exc):
         """Extract exception details and print nicely"""
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        print(repr(
-            traceback.format_exception(exc_type, exc_value, exc_traceback)
-            )
-        )
-        pass
+        super().__init__(exc)
 
 
 class ProcessorException(BaseException):
     """Handle processing exceptions"""
-    pass
+    def __init__(self, exc):
+        pass
 
 
 class AnalyzerException(BaseException):
     """Handle analyzer exceptions"""
-    pass
+    def __init__(self, exc):
+        pass
 
 
 class StorageException(BaseException):
     """Handle storage exceptions"""
-    pass
+    def __init__(self, exc):
+        pass
 
 
 class CollectorException(BaseException):
     """Handle collector exceptions"""
-    pass
+    def __init__(self, exc):
+        pass
