@@ -8,6 +8,10 @@ class S3Collector(Collector):
 
     session = None
 
+    default_options = { 
+        'remove_objects': True,
+    }
+
     required_options = [
         'bucket'
         'access_key',
