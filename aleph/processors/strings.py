@@ -3,7 +3,7 @@ import string
 
 from netaddr import IPNetwork
 
-from aleph.common.base import ProcessorBase
+from aleph.common.base import Processor
 from aleph.config.constants import MIMETYPES_ARCHIVE
 
 # Some of the Regex below were taken from https://github.com/viper-framework/viper/blob/master/viper/modules/strings.py
@@ -78,7 +78,7 @@ MAC_ADDR_REGEX = re.compile(r'\b(?i)(?:[0-9A-F]{2}[:-]){5}(?:[0-9A-F]{2})\b')
 
 
 
-class StringsProcessor(ProcessorBase):
+class StringsProcessor(Processor):
 
     name = 'strings'
     mimetypes_except = MIMETYPES_ARCHIVE + ['text/url']

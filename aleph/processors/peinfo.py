@@ -3,10 +3,10 @@ import datetime
 
 from itertools import zip_longest
 
-from aleph.common.base import ProcessorBase
+from aleph.common.base import Processor
 from aleph.common.utils import entropy, normalize_name
 
-class PEInfoProcessor(ProcessorBase):
+class PEInfoProcessor(Processor):
 
     name = 'pe_info'
     default_options = { 'enabled': True, 'extract_resources': False }

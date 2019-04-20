@@ -3,11 +3,11 @@ from io import BytesIO
 from pdfminer.pdfparser import PDFParser
 from pdfminer.pdfdocument import PDFDocument
 
-from aleph.common.base import ProcessorBase
+from aleph.common.base import Processor
 from aleph.common.utils import normalize_name
 
 
-class PDFInfoProcessor(ProcessorBase):
+class PDFInfoProcessor(Processor):
 
     name = 'pdf_info'
     mimetypes = ['application/pdf']

@@ -4,16 +4,15 @@ from aleph import app
 from aleph.config import settings
 from aleph.common.loader import list_submodules
 from aleph.common.utils import decode_data, hash_data, get_plugin, call_task
-from aleph.common.base import TaskBase
 from aleph.common.filetype import detect_filetype
 
-@app.task(bind=True, base=TaskBase)
+@app.task(bind=True)
 def analyze(self, sample):
 
     self.logger.info('Sending sample %s for analysis' % sample['id'])
     dispatch('analyzer', sample)
 
-@app.task(bind=True, base=TaskBase)
+@app.task(bind=True)
 def process(self, sample_data, metadata):
 
     # Grab additional metadata

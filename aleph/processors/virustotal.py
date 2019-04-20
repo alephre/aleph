@@ -4,13 +4,13 @@ from operator import itemgetter
 from virus_total_apis import PublicApi as VirusTotal
 
 from aleph.common.utils import hash_data, in_string
-from aleph.common.base import ProcessorBase
+from aleph.common.base import Processor
 from aleph.config.constants import MIMETYPES_ARCHIVE
 
 VT_RESPONSE_OK = 200
 VT_SCAN_OK = 1
 
-class VirusTotalProcessor(ProcessorBase):
+class VirusTotalProcessor(Processor):
 
     name = 'virustotal'
     category = 'sandbox'

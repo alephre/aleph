@@ -1,8 +1,8 @@
 import email
 import tempfile
-from aleph.common.base import ProcessorBase
+from aleph.common.base import Processor
 
-class EmailProcessor(ProcessorBase):
+class EmailProcessor(Processor):
 
     name = 'email'
     mimetypes = ['message/rfc822']

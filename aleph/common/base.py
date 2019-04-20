@@ -7,10 +7,12 @@ from datetime import datetime
 from celery import Task
 from celery.utils.log import get_task_logger
 
+from abc import ABC
+
 from aleph.config import ConfigManager, settings
 from aleph.common.utils import encode_data, decode_data, call_task, to_es_date
 
-class TaskBase(Task):
+class AlephTask(Task):
 
     def __call__(self, *args, **kwargs):
         self.logger = get_task_logger(__name__)
@@ -23,7 +25,7 @@ class TaskBase(Task):
         self.logger.error('Task %s[%s] failed: %s' % (self.name, task_id, einfo))
         self.retry(exc=exc)
 
-class ComponentBase(object):
+class Component(ABC):
 
     name = None
     options = {}
@@ -34,7 +36,7 @@ class ComponentBase(object):
 
     def __init__(self, options = None, logger = None, dry=False):
 
-        super(ComponentBase, self).__init__()
+        super(Component, self).__init__()
 
         if not self.component_type:
             raise NotImplementedError('component_type is undefined')
@@ -97,7 +99,7 @@ class ComponentBase(object):
     def init(self):
         pass
 
-class PluginBase(ComponentBase):
+class Plugin(Component):
 
     component_type = 'plugin'
 
@@ -139,14 +141,14 @@ class PluginBase(ComponentBase):
 
         self.document_meta = {}
 
-class ProcessorBase(PluginBase):
+class Processor(Plugin):
 
     component_type = 'processor'
     
     def process(self, sample):
         raise NotImplementedError('Process routine not implemented on %s plugin' % self.name)
 
-class AnalyzerBase(PluginBase):
+class Analyzer(Plugin):
 
     component_type = 'analyzer'
 
@@ -212,7 +214,7 @@ class AnalyzerBase(PluginBase):
         self.analyze()
         return self.flags
 
-class DatastoreBase(ComponentBase):
+class Datastore(Component):
 
     component_type = 'datastore'
     default_options = { 'enabled': False, }
@@ -239,7 +241,7 @@ class DatastoreBase(ComponentBase):
         }
         call_task('aleph.tasks.analyze', args=[sample])
 
-class StorageBase(ComponentBase):
+class Storage(Component):
 
     component_type = 'storage'
     default_options = { 'enabled': False, }
@@ -252,7 +254,7 @@ class StorageBase(ComponentBase):
     def store(self, sample_id, data):
         raise NotImplementedError('Store routine not implemented on %s storage handler' % self.name)
 
-class CollectorBase(ComponentBase):
+class Collector(Component):
 
     component_type = 'collector'
     default_options = { 'enabled': False, }
@@ -262,10 +264,10 @@ class CollectorBase(ComponentBase):
     def collect(self):
         raise NotImplementedError('Collection routine not implemented on %s collector' % self.name)
 
-class FiletypeDetectorBase(ComponentBase):
+class Filter(Component):
 
-    component_type = 'filetype_detector'
+    component_type = 'filter'
 
     def detect(self, sample):
-        raise NotImplementedError('Detect routine not implemented on %s detector' % self.name)
+        raise NotImplementedError('Detect routine not implemented on %s filter' % self.name)
 

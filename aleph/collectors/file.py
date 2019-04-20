@@ -2,9 +2,9 @@ import os
 
 from time import time
 
-from aleph.common.base import CollectorBase
+from aleph.common.base import Collector
 
-class FileCollector(CollectorBase):
+class FileCollector(Collector):
 
     required_options = ['path']
 

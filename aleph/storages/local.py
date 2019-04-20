@@ -1,8 +1,8 @@
 import os
 
-from aleph.common.base import StorageBase
+from aleph.common.base import Storage
 
-class LocalStorage(StorageBase):
+class LocalStorage(Storage):
 
     required_options = ['path']
 

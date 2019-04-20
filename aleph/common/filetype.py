@@ -3,12 +3,12 @@ import magic
 
 from celery.utils.log import get_task_logger
 
-from aleph.common.base import FiletypeDetectorBase
+from aleph.common.base import Filter
 from aleph.config.constants import ETC_FILETYPE_YARA_RULES
 
 logger = get_task_logger(__name__)
 
-class Magic(FiletypeDetectorBase):
+class Magic(Filter):
 
     """ Simple class to identfy magic type by file buffer """
 
@@ -23,7 +23,7 @@ class Magic(FiletypeDetectorBase):
 
         return None
 
-class Yara(FiletypeDetectorBase):
+class Yara(Filter):
 
     #@FIXME use ConfigManager
     rules_file = ETC_FILETYPE_YARA_RULES

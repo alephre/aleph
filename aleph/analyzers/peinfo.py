@@ -1,6 +1,6 @@
 import re
 
-from aleph.common.base import AnalyzerBase
+from aleph.common.base import Analyzer
 from aleph.helpers.mitre_attack import *
 
 IMPORT_MIN_MATCHES = 2
@@ -9,7 +9,7 @@ EVIL_ENTROPY_THRESHOLD = 7
 
 RICH_COMPTYPE_TOTAL_IMPORTS = 0x001
 
-class PEInfoAnalyzer(AnalyzerBase):
+class PEInfoAnalyzer(Analyzer):
 
     name = 'pe_static_analyzer'
     mimetypes = ['application/x-dosexec']

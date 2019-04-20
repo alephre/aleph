@@ -1,9 +1,9 @@
 import piexif
 
 from io import BytesIO
-from aleph.common.base import ProcessorBase
+from aleph.common.base import Processor
 
-class EXIFProcessor(ProcessorBase):
+class EXIFProcessor(Processor):
 
     default_options = {'enabled': True}
     mimetypes = [

@@ -1,9 +1,9 @@
 from elasticsearch import Elasticsearch
-from aleph.common.base import DatastoreBase
+from aleph.common.base import Datastore
 
 DEFAULT_TIMEOUT=30
 
-class ElasticsearchDatastore(DatastoreBase):
+class ElasticsearchDatastore(Datastore):
 
     default_options = {
         'host': 'localhost',

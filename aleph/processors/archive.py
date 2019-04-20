@@ -4,9 +4,9 @@ import shutil
 
 from tempfile import mkdtemp
 from io import BytesIO
-from aleph.common.base import ProcessorBase
+from aleph.common.base import Processor
 
-class ArchiveProcessor(ProcessorBase):
+class ArchiveProcessor(Processor):
 
     default_options = { 'enabled': False, }
 
