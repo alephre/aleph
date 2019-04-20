@@ -96,7 +96,7 @@ class StringsProcessor(Processor):
         self.classifiers['emails'] = (EMAIL_REGEX,)
         self.classifiers['http_headers'] = (HOST_REGEX, USERAGENT_REGEX, GET_POST_REGEX)
         self.classifiers['win32'] = (REGKEY_REGEX, REGKEY2_REGEX, PDB_REGEX)
-        self.classifiers['mac'] = (MAC_ADDR_REGEX)
+        self.classifiers['mac'] = (MAC_ADDR_REGEX, )
         self.classifiers['cryptocurrency_wallet'] = (
             CRYPTO_WALLET_BITCOIN,
             CRYPTO_WALLET_BITCOIN_CASH,
