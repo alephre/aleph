@@ -1,8 +1,9 @@
+import re
 import email
-import tempfile
 from aleph.common.base import Processor
+import chardet
 
-class EmailProcessor(Processor):
+class EmailProcessor(ProcessorBase):
 
     name = 'email'
     mimetypes = ['message/rfc822']
@@ -12,17 +13,7 @@ class EmailProcessor(Processor):
         file_content = sample['data']
         mail = email.message_from_bytes(file_content)
 
-        # Get attachments
-        for part in mail.walk():
-            if part.get_content_maintype() == 'multipart':
-                continue
-            if part.get('Content-Disposition') is None:
-                continue
-            filename = part.get_filename()
- 
-            if filename:
-                file_data = part.get_payload(decode=True)
-                self.dispatch(file_data, parent=sample['id'], filename=filename)
+        self.get_attachments(mail, sample['id'])
 
         headers = []
         for item in mail.items():
@@ -50,7 +41,7 @@ class EmailProcessor(Processor):
 
         if msg.is_multipart():
             for part in msg.get_payload():
-                self.get_attachment(part, sample_id)
+                self.get_attachments(part, sample_id)
         else:
             if 'Content-Disposition' in msg and msg.get_content_type() != 'text/plain':
                 file_name = msg.get_filename('')
@@ -63,6 +54,7 @@ class EmailProcessor(Processor):
                         pass
 
                     file_data = msg.get_payload(decode=True)
+                    self.logger.debug('Inserting attachment to dispatch. parent: {0}'.format(sample_id))
                     self.dispatch(file_data, parent=sample_id, filename=file_name)
 
     def decode_field(self, field):
