@@ -146,7 +146,11 @@ class PEInfoProcessor(Processor):
                     self.add_tag('future-timestamp')
 
             # Check for ASLR, DEP/NX and SEH mitigations
-            data['mitigations'] = {}
+            data['mitigations'] = {
+                'aslr': False,
+                'dep': False,
+                'seh': False,
+            }
             if pe.OPTIONAL_HEADER.DllCharacteristics > 0:
                 if pe.OPTIONAL_HEADER.DllCharacteristics & 0x0040:
                     data['mitigations']['aslr'] = True
@@ -160,19 +164,27 @@ class PEInfoProcessor(Processor):
                     data['mitigations']['seh'] = True
 
             # Check imports & imphash
+            imports = []
             if hasattr(pe, 'DIRECTORY_ENTRY_IMPORT'):
                 data['imphash'] = pe.get_imphash()
 
-                imports = {}
                 for lib in pe.DIRECTORY_ENTRY_IMPORT:
                     dll_name = lib.dll.decode('utf-8')
-                    imports[dll_name] = []
+                    import_timestamp = getattr(lib.struct, 'TimeDateStamp', None)
+
+                    import_obj = {
+                        'name': dll_name,
+                        'timestamp': None if (import_timestamp == 0) else import_timestamp,
+                        'imports': []
+                    }
 
                     for imp in lib.imports:
                         if (imp.name != None) and (imp.name != ""):
-                            imports[dll_name].append({'address': hex(imp.address), 'name': imp.name.decode('utf-8')})
+                            import_obj['imports'].append({'address': hex(imp.address), 'name': imp.name.decode('utf-8')})
+
+                    imports.append(import_obj)
                             
-                data['imports'] = imports
+            data['imports'] = imports
             
             # Check RICH header
             rich = pe.parse_rich_header()
