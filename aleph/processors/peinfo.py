@@ -9,7 +9,7 @@ from aleph.common.utils import entropy, normalize_name
 class PEInfoProcessor(Processor):
 
     name = 'pe_info'
-    default_options = { 'enabled': True, 'extract_resources': False }
+    default_options = { 'enabled': True, 'extract_resources': True }
     mimetypes = ['application/x-dosexec']
     
     def extract_structure(self, data, force=[]):
