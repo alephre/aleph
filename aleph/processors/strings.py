@@ -1,10 +1,16 @@
 import re
 import string
 
+from collections import namedtuple
 from netaddr import IPNetwork
 
 from aleph.common.base import Processor
 from aleph.config.constants import MIMETYPES_ARCHIVE
+
+# String parsing functions from https://gist.github.com/williballenthin/8e3913358a7996eab9b96bd57fc59df2
+
+String = namedtuple("String", ["s", "offset"])
+ASCII_BYTE = rb" !\"#\$%&\'\(\)\*\+,-\./0123456789:;<=>\?@ABCDEFGHIJKLMNOPQRSTUVWXYZ\[\]\^_`abcdefghijklmnopqrstuvwxyz\{\|\}\\\~\t"
 
 # Some of the Regex below were taken from https://github.com/viper-framework/viper/blob/master/viper/modules/strings.py
 
@@ -108,20 +114,28 @@ class StringsProcessor(Processor):
             CRYPTO_WALLET_NEO,
             )
 
+    def ascii_strings(self, buf, n=4):
+        reg = rb"([%s]{%d,})" % (ASCII_BYTE, n)
+        ascii_re = re.compile(reg)
+        for match in ascii_re.finditer(buf):
+            yield String(match.group().decode("ascii"), match.start())
+
+    def unicode_strings(self, buf, n=4):
+        reg = rb"((?:[%s]\x00){%d,})" % (ASCII_BYTE, n)
+        uni_re = re.compile(reg)
+        for match in uni_re.finditer(buf):
+            try:
+                yield String(match.group().decode("utf-16"), match.start())
+            except UnicodeDecodeError:
+                pass
 
     def strings(self, data, min=4):
-        result = ""
-        #_data = data.decode('utf-8', 'backslashreplace')
-        for c in data:
-            if chr(c) in string.printable:
-                result += chr(c)
-                continue
-            if len(result) >= min:
-                yield result
-            result = ""
-        if len(result) >= min:  # catch result at EOF
-            yield result
 
+        for s in self.ascii_strings(data):
+            yield s
+
+        for s in self.unicode_strings(data):
+            yield s
 
     def process(self, sample):
 
@@ -141,7 +155,7 @@ class StringsProcessor(Processor):
                     result[classifier] = set()
 
                 for regex in regexes:
-                    if regex.search(s):
+                    if regex.search(s[0]):
                         result[classifier].add(s)
                         string_classified = True
 
