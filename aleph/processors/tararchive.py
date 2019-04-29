@@ -1,7 +1,7 @@
 import tarfile
 from aleph.processors.archive import ArchiveProcessor
 
-class TarArchiveProcessor(ArchiveProcessor):
+class TarArchive(ArchiveProcessor):
 
     name = 'tararchive'
     default_options = { 'enabled': True, }

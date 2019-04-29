@@ -9,7 +9,7 @@ EVIL_ENTROPY_THRESHOLD = 7
 
 RICH_COMPTYPE_TOTAL_IMPORTS = 0x001
 
-class PEInfoAnalyzer(Analyzer):
+class PEInfo(Analyzer):
 
     name = 'pe_static_analyzer'
     filetypes = ['application/x-dosexec']

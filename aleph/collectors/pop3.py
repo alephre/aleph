@@ -10,7 +10,7 @@ import poplib
 from aleph.common.base import CollectorBase
 
 
-class POPCollector(CollectorBase):
+class POP3(CollectorBase):
 
     required_options = ['pop_server', 'pop_user', 'pop_password', 'pop_port']
 

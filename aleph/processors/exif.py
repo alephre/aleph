@@ -3,7 +3,7 @@ import piexif
 from io import BytesIO
 from aleph.common.base import Processor
 
-class EXIFProcessor(Processor):
+class EXIF(Processor):
 
     default_options = {'enabled': True}
     filetypes = [

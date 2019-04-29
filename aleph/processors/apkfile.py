@@ -4,7 +4,7 @@ from aleph.common.base import Processor
 
 from androguard.core.bytecodes.apk import APK
 
-class APKFileProcessor(Processor):
+class APKFile(Processor):
     """Plugin that analyze APK files and extracts static properties including:
 
         * manifest properties (e.g., permissions, activities)

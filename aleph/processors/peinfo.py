@@ -6,7 +6,7 @@ from itertools import zip_longest
 from aleph.common.base import Processor
 from aleph.common.utils import entropy, normalize_name
 
-class PEInfoProcessor(Processor):
+class PEInfo(Processor):
 
     name = 'pe_info'
     default_options = { 'enabled': True, 'extract_resources': True }

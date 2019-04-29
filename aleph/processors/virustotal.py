@@ -10,7 +10,7 @@ from aleph.config.constants import FILETYPES_ARCHIVE
 VT_RESPONSE_OK = 200
 VT_SCAN_OK = 1
 
-class VirusTotalProcessor(Processor):
+class VirusTotal(Processor):
 
     name = 'virustotal'
     category = 'sandbox'

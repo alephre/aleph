@@ -4,7 +4,7 @@ from time import time
 
 from aleph.common.base import Collector
 
-class FileCollector(Collector):
+class File(Collector):
 
     required_options = ['path']
 

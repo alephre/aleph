@@ -3,7 +3,7 @@ import boto3
 from aleph.common.base import Collector
 
 
-class S3Collector(Collector):
+class S3(Collector):
     """Collect samples from an AWS S3 Bucket"""
 
     session = None

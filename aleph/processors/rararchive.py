@@ -1,7 +1,7 @@
 from rarfile import RarFile
 from aleph.processors.archive import ArchiveProcessor
 
-class RarArchiveProcessor(ArchiveProcessor):
+class RarArchive(ArchiveProcessor):
 
     name = 'rararchive'
     default_options = { 'enabled': True, 'passwords': [ 'infected', 'evil', 'virus', 'malicious' ] }

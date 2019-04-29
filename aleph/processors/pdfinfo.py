@@ -7,7 +7,7 @@ from aleph.common.base import Processor
 from aleph.common.utils import normalize_name
 
 
-class PDFInfoProcessor(Processor):
+class PDFInfo(Processor):
 
     name = 'pdf_info'
     filetypes = ['application/pdf']

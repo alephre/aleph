@@ -6,7 +6,7 @@ from tempfile import mkdtemp
 from io import BytesIO
 from aleph.common.base import Processor
 
-class ArchiveProcessor(Processor):
+class Archive(Processor):
 
     default_options = { 'enabled': False, }
 

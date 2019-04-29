@@ -3,7 +3,7 @@ import inspect
 import importlib
 import pkgutil
 
-def load_component(component_name, package_name, component_type):
+def load_component(component_name, package_name):
 
     if component_name == 'tasks':
         raise ImportError('Cannot import tasks module as a component')
@@ -18,7 +18,7 @@ def load_component(component_name, package_name, component_type):
         class_members = inspect.getmembers(sys.modules[module_name], inspect.isclass)
         
         for name, obj in class_members:
-            expected_name = '%s%s' % (component_name, component_type)
+            expected_name = '%s' % component_name
             if name.lower() == expected_name.lower():
                 class_name = name
                 break
@@ -34,19 +34,19 @@ def load_component(component_name, package_name, component_type):
         raise
 
 def load_collector(name):
-    return load_component(name, 'collectors', 'collector')
+    return load_component(name, 'collectors')
 
 def load_storage(name):
-    return load_component(name, 'storages', 'storage')
+    return load_component(name, 'storages')
 
 def load_datastore(name):
-    return load_component(name, 'datastores', 'datastore')
+    return load_component(name, 'datastores')
 
 def load_processor(name):
-    return load_component(name, 'processors', 'processor')
+    return load_component(name, 'processors')
 
 def load_analyzer(name):
-    return load_component(name, 'analyzers', 'analyzer')
+    return load_component(name, 'analyzers')
 
 def list_submodules(package_name): 
     """ Lists all submodules of a module, recursively

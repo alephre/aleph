@@ -3,7 +3,7 @@ import binascii
 
 from aleph.common.base import Processor
 
-class HashProcessor(Processor):
+class Hash(Processor):
 
     def process(self, sample):
 

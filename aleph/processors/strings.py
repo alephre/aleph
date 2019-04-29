@@ -86,7 +86,7 @@ t
 
 
 
-class StringsProcessor(Processor):
+class Strings(Processor):
 
     name = 'strings'
     filetypes_except = FILETYPES_ARCHIVE + FILETYPES_META + ['text/url']
