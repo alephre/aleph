@@ -3,12 +3,12 @@ import magic
 
 from celery.utils.log import get_task_logger
 
-from aleph.common.base import Filter
-from aleph.config.constants import ETC_FILETYPE_YARA_RULES
+from aleph.common.base import Classifier
+from aleph.config.constants import CLASSIFIER_YARA_DEFAULT_RULES
 
 logger = get_task_logger(__name__)
 
-class Magic(Filter):
+class Magic(Classifier):
 
     """ Simple class to identfy magic type by file buffer """
 
@@ -23,10 +23,14 @@ class Magic(Filter):
 
         return None
 
-class Yara(Filter):
+class Yara(Classifier):
 
-    #@FIXME use ConfigManager
-    rules_file = ETC_FILETYPE_YARA_RULES
+    rules_file = CLASSIFIER_YARA_DEFAULT_RULES
+
+    def setup(self):
+
+        if self.config.has_option('rules_file'):
+            self.rules_file = self.config.get('rules_file')
 
     def detect(self, data):
         """ Identify file type by specialized Yara rule set where 'meta.file_type' stores abbreviated type names """
@@ -49,9 +53,7 @@ class Yara(Filter):
 
         return None
 
-def detect_filetype(data):
-
-    engines = [Yara(), Magic()]
+def detect_filetype(data, engines=[Yara(), Magic()]):
 
     for e in engines:
         result = e.detect(data)

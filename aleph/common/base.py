@@ -106,8 +106,8 @@ class Plugin(Component):
     category = 'generic'
     default_options = { 'enabled': True, }
 
-    mimetypes = []
-    mimetypes_exclude = []
+    filetypes = []
+    filetypes_exclude = []
 
     document_meta = {}
 
@@ -116,18 +116,18 @@ class Plugin(Component):
         if not self.options.get('enabled'):
             return False
 
-        if 'mimetype' not in sample['metadata']:
-            self.logger.error('mimetype entry not present on sample %s' % sample['id'])
+        if 'filetype' not in sample['metadata']:
+            self.logger.error('filetype entry not present on sample %s' % sample['id'])
             return False
 
-        # Check for mimetype-specific plugins
-        mimetype = sample['metadata']['mimetype']
-        if len(self.mimetypes) > 0:
-            if not mimetype in self.mimetypes:
+        # Check for filetype-specific plugins
+        filetype = sample['metadata']['filetype']
+        if len(self.filetypes) > 0:
+            if not filetype in self.filetypes:
                 return False
 
-        if len(self.mimetypes_exclude) > 0:
-            if mimetype in self.mimetypes_exclude:
+        if len(self.filetypes_exclude) > 0:
+            if filetype in self.filetypes_exclude:
                 return False
 
         return True
@@ -264,9 +264,9 @@ class Collector(Component):
     def collect(self):
         raise NotImplementedError('Collection routine not implemented on %s collector' % self.name)
 
-class Filter(Component):
+class Classifier(Component):
 
-    component_type = 'filter'
+    component_type = 'classifier'
 
     def detect(self, sample):
         raise NotImplementedError('Detect routine not implemented on %s filter' % self.name)

@@ -5,7 +5,7 @@ class ZipArchiveProcessor(ArchiveProcessor):
 
     name = 'ziparchive'
     default_options = { 'enabled': True, 'passwords': [ 'infected', 'evil', 'virus', 'malicious' ] }
-    mimetypes = ['application/zip']
+    filetypes = ['application/zip']
 
     def setup(self):
         self.engine = ZipFile

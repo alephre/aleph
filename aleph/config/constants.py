@@ -7,7 +7,7 @@ CELERY_AUTODISCOVER_TASKS = [
     'aleph.storages',
 ]
 
-MIMETYPES_ARCHIVE = [
+FILETYPES_ARCHIVE = [
     'application/zip',
     'application/gzip',
     'application/x-gzip',
@@ -15,4 +15,4 @@ MIMETYPES_ARCHIVE = [
     'application/tar'
 ]
 
-ETC_FILETYPE_YARA_RULES = 'etc/filetypes.yara'
+CLASSIFIER_YARA_DEFAULT_RULES = 'etc/filetypes.yara'

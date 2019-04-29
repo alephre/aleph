@@ -6,7 +6,7 @@ from aleph.common.base import Processor
 class EXIFProcessor(Processor):
 
     default_options = {'enabled': True}
-    mimetypes = [
+    filetypes = [
         'image/jpeg',
         'image/tiff',
         ]

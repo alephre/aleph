@@ -13,7 +13,7 @@ class APKFileProcessor(Processor):
         Requires androguard
     """
     name = 'apkfile'
-    mimetypes = ['application/vnd.android.package-archive']
+    filetypes = ['application/vnd.android.package-archive']
 
     def parse_apk(self, data):
 

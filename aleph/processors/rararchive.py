@@ -5,7 +5,7 @@ class RarArchiveProcessor(ArchiveProcessor):
 
     name = 'rararchive'
     default_options = { 'enabled': True, 'passwords': [ 'infected', 'evil', 'virus', 'malicious' ] }
-    mimetypes = ['application/x-rar']
+    filetypes = ['application/x-rar']
 
     def setup(self):
         self.engine = RarFile

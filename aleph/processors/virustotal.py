@@ -5,7 +5,7 @@ from virus_total_apis import PublicApi as VirusTotal
 
 from aleph.common.utils import hash_data, in_string
 from aleph.common.base import Processor
-from aleph.config.constants import MIMETYPES_ARCHIVE
+from aleph.config.constants import FILETYPES_ARCHIVE
 
 VT_RESPONSE_OK = 200
 VT_SCAN_OK = 1
@@ -17,7 +17,7 @@ class VirusTotalProcessor(Processor):
 
     default_options = {'report_sleep': 60, 'retry_count': 10, 'send_files': True, 'enabled': False}
     required_options = ['api_key']
-    mimetypes_except = MIMETYPES_ARCHIVE + ['text/url']
+    filetypes_except = FILETYPES_ARCHIVE + ['text/url']
 
     def setup(self):
 

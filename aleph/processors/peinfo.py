@@ -10,7 +10,7 @@ class PEInfoProcessor(Processor):
 
     name = 'pe_info'
     default_options = { 'enabled': True, 'extract_resources': True }
-    mimetypes = ['application/x-dosexec']
+    filetypes = ['application/x-dosexec']
     
     def extract_structure(self, data, force=[]):
 

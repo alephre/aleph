@@ -12,12 +12,12 @@ class ArchiveProcessor(Processor):
 
     engine = None
     namelist = 'namelist'
-    mimetypes = ['none']
+    filetypes = [None]
 
     def setup(self):
         raise NotImplementedError('Archive processor should not be run by itself. Child classes should implement the setup() method and set self.engine to the appropriate archive library and self.namelist to the list files function')
 
-    def extract_file(self, src, dest, password=None, mimetype=None):
+    def extract_file(self, src, dest, password=None, filetype=None):
 
         with self.engine(src, 'r') as archive:
             if password:
@@ -51,7 +51,7 @@ class ArchiveProcessor(Processor):
 
             self.logger.debug("Uncompressing sample %s with password '%s'" % (sample['id'], password))
             try:
-                archive_contents = self.extract_file(file_obj, temp_dir, password=password, mimetype=sample['metadata']['mimetype'])
+                archive_contents = self.extract_file(file_obj, temp_dir, password=password, filetype=sample['metadata']['filetype'])
                 break
             except Exception as e:
                 last_exception = str(e)
@@ -77,7 +77,7 @@ class ArchiveProcessor(Processor):
         if len(extracted_files) == 0:
             self.logger.error('Unable to uncompress sample %s [%s]: %s' % (
                 sample['id'], 
-                sample['metadata']['mimetype'],
+                sample['metadata']['filetype'],
                 last_exception
                 ))
             self.add_tag('archive-invalid')

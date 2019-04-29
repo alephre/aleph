@@ -12,7 +12,7 @@ RICH_COMPTYPE_TOTAL_IMPORTS = 0x001
 class PEInfoAnalyzer(Analyzer):
 
     name = 'pe_static_analyzer'
-    mimetypes = ['application/x-dosexec']
+    filetypes = ['application/x-dosexec']
 
     # Mostly taken from <https://github.com/JusticeRage/Manalyze/blob/master/plugins/plugin_imports.cpp>
     evil_imports = {

@@ -5,7 +5,7 @@ from collections import namedtuple
 from netaddr import IPNetwork
 
 from aleph.common.base import Processor
-from aleph.config.constants import MIMETYPES_ARCHIVE
+from aleph.config.constants import FILETYPES_ARCHIVE
 
 # String parsing functions from https://gist.github.com/williballenthin/8e3913358a7996eab9b96bd57fc59df2
 
@@ -87,7 +87,7 @@ MAC_ADDR_REGEX = re.compile(r'\b(?i)(?:[0-9A-F]{2}[:-]){5}(?:[0-9A-F]{2})\b')
 class StringsProcessor(Processor):
 
     name = 'strings'
-    mimetypes_except = MIMETYPES_ARCHIVE + ['text/url']
+    filetypes_except = FILETYPES_ARCHIVE + ['text/url']
 
     classifiers = {}
 

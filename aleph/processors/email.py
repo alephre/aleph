@@ -6,7 +6,7 @@ import chardet
 class EmailProcessor(ProcessorBase):
 
     name = 'email'
-    mimetypes = ['message/rfc822']
+    filetypes = ['message/rfc822']
 
     def process(self, sample):
 

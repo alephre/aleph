@@ -5,7 +5,7 @@ class TarArchiveProcessor(ArchiveProcessor):
 
     name = 'tararchive'
     default_options = { 'enabled': True, }
-    mimetypes = [
+    filetypes = [
         'application/x-tar', 
         'application/gzip', 
         'application/x-gzip',
@@ -18,7 +18,7 @@ class TarArchiveProcessor(ArchiveProcessor):
     def setup(self):
         pass
 
-    def extract_file(self, src, dest, password=None, mimetype=None):
+    def extract_file(self, src, dest, password=None, filetype=None):
 
         _mode = {
             'application/x-tar': '', 
@@ -26,7 +26,7 @@ class TarArchiveProcessor(ArchiveProcessor):
             'application/x-gzip': 'gz',
             'application/x-xz': 'xz',
             'application/x-bzip2': 'bz2'
-        }.get(mimetype)
+        }.get(filetype)
 
         self.mode = _mode
 

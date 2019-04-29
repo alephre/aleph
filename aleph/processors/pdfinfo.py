@@ -10,7 +10,7 @@ from aleph.common.utils import normalize_name
 class PDFInfoProcessor(Processor):
 
     name = 'pdf_info'
-    mimetypes = ['application/pdf']
+    filetypes = ['application/pdf']
 
     def process(self, sample):
         """Get PDF document metadata and encryption information
