@@ -8,6 +8,7 @@ pefile
 piexif
 pip-chill
 python-magic
+python-slugify
 pyyaml
 rarfile
 virustotal-api

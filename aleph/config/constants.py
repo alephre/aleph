@@ -7,6 +7,13 @@ CELERY_AUTODISCOVER_TASKS = [
     'aleph.storages',
 ]
 
+FILETYPES_META = [
+    'meta/domain',
+    'meta/url',
+    'meta/host',
+    'meta/location'
+]
+
 FILETYPES_ARCHIVE = [
     'application/zip',
     'application/gzip',

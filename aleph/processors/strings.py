@@ -1,11 +1,12 @@
 import re
 import string
 
+from slugify import slugify
 from collections import namedtuple
 from netaddr import IPNetwork
 
 from aleph.common.base import Processor
-from aleph.config.constants import FILETYPES_ARCHIVE
+from aleph.config.constants import FILETYPES_ARCHIVE, FILETYPES_META
 
 # String parsing functions from https://gist.github.com/williballenthin/8e3913358a7996eab9b96bd57fc59df2
 
@@ -75,6 +76,7 @@ MAC_ADDR_REGEX = re.compile(r'\b(?i)(?:[0-9A-F]{2}[:-]){5}(?:[0-9A-F]{2})\b')
 #        {'net': IPNetwork('192.0.0.0/24'), 'org': 'IETF Protocol Assignments per RFC 6890'},
 #        {'net': IPNetwork('192.0.2.0/24'), 'org': 'Documentation and examples per RFC 6890'},
 #        {'net': IPNetwork('192.88.99.0/24'), 'org': 'IPv6 to IPv4 relay per RFC 3068'},
+t
 #        {'net': IPNetwork('198.18.0.0/15'), 'org': 'Network benchmark tests per RFC 2544'},
 #        {'net': IPNetwork('198.51.100.0/24'), 'org': 'Documentation and examples per RFC 5737'},
 #        {'net': IPNetwork('203.0.113.0/24'), 'org': 'Documentation and examples per RFC 5737'},
@@ -87,7 +89,7 @@ MAC_ADDR_REGEX = re.compile(r'\b(?i)(?:[0-9A-F]{2}[:-]){5}(?:[0-9A-F]{2})\b')
 class StringsProcessor(Processor):
 
     name = 'strings'
-    filetypes_except = FILETYPES_ARCHIVE + ['text/url']
+    filetypes_except = FILETYPES_ARCHIVE + FILETYPES_META + ['text/url']
 
     classifiers = {}
 
@@ -161,6 +163,29 @@ class StringsProcessor(Processor):
 
             if not string_classified:
                 result['uncategorized'].add(s)
+
+        # Extract Meta resources
+        meta_res = {
+            'url': 'urls',
+            'host': 'ips',
+            'domain': 'domains'
+        }
+
+        for meta_type, result_key in meta_res.items():
+
+            if result_key in result.keys():
+                
+                metadata = {
+                    'filetype': 'meta/%s' % meta_type,
+                    'filetype_desc': '%s extracted from strings' % meta_type
+                }
+
+                for res in result[result_key]:
+                    filename = '%s.%s.meta' % (slugify(res).lower(), meta_type)
+                    filedata = res
+
+                    self.dispatch(filedata, metadata=metadata, filename=filename, parent=sample['id'])
+                    
 
         # Convert sets to lists because JSON can't handle sets
         return dict((k, list(v)) for k, v in result.items())
