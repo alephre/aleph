@@ -1,7 +1,14 @@
 Contributing to Aleph
 ======================
 
-Soon...
+WIP
+
+
+Dealing with requirements
+====================================
+Whenever new pip dependencies are added, regenerate the requirements.txt file with pip-chill instead of pip freeze
+    pip-chill --no-versions > requirements.txt
+
 
 Keeping the version file up to date
 ====================================
