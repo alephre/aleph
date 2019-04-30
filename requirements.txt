@@ -1,6 +1,7 @@
 androguard
 boto3
 celery
+dnspython
 elasticsearch
 netaddr
 pdfminer.six
@@ -11,5 +12,6 @@ python-magic
 python-slugify
 pyyaml
 rarfile
+tld
 virustotal-api
 yara-python
