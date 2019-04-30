@@ -1,9 +1,12 @@
-from elasticsearch import Elasticsearch
+import logging 
+
+from elasticsearch import Elasticsearch as ES
+from elasticsearch.exceptions import ConflictError
 from aleph.common.base import Datastore
 
 DEFAULT_TIMEOUT=30
 
-class ElasticsearchDatastore(Datastore):
+class Elasticsearch(Datastore):
 
     default_options = {
         'host': 'localhost',
@@ -13,22 +16,36 @@ class ElasticsearchDatastore(Datastore):
     }
 
     def setup(self):
-        self.logger.debug("Connecting to elasticsearch at %s:%d" % (self.options.get('host'), self.options.get('port')))
-        self.engine = Elasticsearch([{
-            'host': self.options.get('host'),
-            'port': self.options.get('port'),
-        }])
+        try:
+            self.logger.debug("Connecting to elasticsearch at %s:%d" % (self.options.get('host'), self.options.get('port')))
+            self.engine = ES([{
+                'host': self.options.get('host'),
+                'port': self.options.get('port'),
+            }])
 
-        if not self.engine.ping():
-            self.logger.error("Error connecting to elasticsearch at %s:%d" % (self.options.get('host'), self.options.get('port')))
-        self.logger.debug("Connected to elasticsearch")
+            if not self.engine.ping():
+                self.logger.error("Error connecting to elasticsearch at %s:%d" % (self.options.get('host'), self.options.get('port')))
+            self.logger.debug("Connected to elasticsearch")
+
+            # Disable elasticsearch logging @FIXME maybe a mistake
+            es_logger = logging.getLogger('elasticsearch')
+            es_logger.propagate = False
+            es_trace_logger = logging.getLogger('elasticsearch')
+            es_trace_logger.propagate = False
+        except Exception as e:
+            self.logger.error('Error setting up Elasticsearch datastore: %s' % str(e))
 
     def retrieve(self, sample_id):
-        self.logger.debug("Retrieving metadata for %s" % sample_id)
-        result = self.engine.get(index=self.options.get('index'), doc_type=self.options.get('doctype'), id=sample_id)
-        self.logger.debug("Metadata retrieved for %s" % sample_id)
 
-        if not result:
+        try:
+            self.logger.debug("Retrieving metadata for %s" % sample_id)
+            result = self.engine.get(index=self.options.get('index'), doc_type=self.options.get('doctype'), id=sample_id)
+            self.logger.debug("Metadata retrieved for %s" % sample_id)
+        except Exception as e:
+            self.logger.error('Error retrieving sample %s: %s' % (sample_id, str(e)))
+            return None
+
+        if not result or not isinstance(result, dict) or '_source' not in result.keys():
             return None
 
         metadata = result['_source']
@@ -63,20 +80,29 @@ class ElasticsearchDatastore(Datastore):
         # Merge document with defaults for upsert case
         upsert = {**default_arrays, **treated_document}
 
-        document_body = {
-            'doc': treated_document,
-            'upsert': upsert,
-            }
+        try:
+            document_body = {
+                'doc': treated_document,
+                'upsert': upsert,
+                }
 
-        self._update(sample_id, document_body)
+            self._update(sample_id, document_body)
 
-        # Add list elements one by one
-        for key, values in option_lists.items():
-            if len(values) == 0:
-                continue
-            self._update_array(sample_id, key, values)
+            # Add list elements one by one
+            for key, values in option_lists.items():
+                if len(values) == 0:
+                    continue
+                self._update_array(sample_id, key, values)
 
-        self.logger.debug("Metadata for %s stored on datastore" % sample_id)
+            self.logger.debug("Metadata for %s stored on datastore" % sample_id)
+            return True
+        except ConflictError as e:
+            # Reraise so we can try again, only debug logging
+            self.logger.debug('Conflict storing sample, possibly due concurrency. Staging for retry')
+            raise
+        except Exception as e:
+            self.logger.error('Error storing data for sample %s: %s' % (sample_id, str(e)))
+            raise
 
     def update_task_states(self):
 
@@ -92,52 +118,99 @@ class ElasticsearchDatastore(Datastore):
             "stored_fields": []
         }
 
-        result = self._search(body)['hits']
+        try:
+            search_obj = self._search(body)
 
-        if not result['total']:
-            self.logger.debug('No untagged complete tasks')
+            if not search_obj or not isinstance(search_obj, dict) or 'hits' not in search_obj.keys():
+                self.logger.debug('Invalid search body received')
+                return False
+
+            result = search_obj['hits']
+
+            if not result['total']:
+                self.logger.debug('No untagged complete tasks')
+                return True
+                
+            for entry in result['hits']:
+                sample_id = entry['_id'] 
+                self.dispatch(sample_id, self.retrieve(sample_id))
+                self.logger.debug("Tagging sample %s as 'scan_completed'" % sample_id)
+                self._update_array(sample_id, 'tags', ['scan_completed'])
+
             return True
-            
-        for entry in result['hits']:
-            sample_id = entry['_id'] 
-            self.dispatch(sample_id, self.retrieve(sample_id))
-            self.logger.debug("Tagging sample %s as 'scan_completed'" % sample_id)
-            self._update_array(sample_id, 'tags', ['scan_completed'])
+        except ConflictError as e:
+            # Reraise so we can try again, only debug logging
+            self.logger.debug('Conflict updating task states, possibly due concurrency. Staging for retry')
+            raise
+        except Exception as e:
+            self.logger.error('Error updating task states: %s' % str(e))
+            raise
 
     def _search(self, body):
 
-        result = self.engine.search(
-            index=self.options.get('index'),
-            doc_type=self.options.get('doctype'), body=body
-            )
+        try:
+            result = self.engine.search(
+                index=self.options.get('index'),
+                doc_type=self.options.get('doctype'), body=body
+                )
 
-        return result
+            return result
+        except Exception as e:
+            self.logger.error('Error searching index: %s' % str(e))
+            raise
 
     def _update_array(self, sample_id, array_name, values):
 
-            params = {}
-            params[array_name] = values
+            #params = {}
+            #params[array_name] = values
 
-            for value in values:
+            statements = []
+            params_object = {}
+
+            for index, value in enumerate(values):
+
+                value_key = 'value_%d' % index
+                params_object[value_key] = value
+                
+                statements.append(f"if (ctx._source.{array_name}.contains(params.{value_key})) {{ ctx.op = 'none' }} else {{ ctx._source.{array_name}.add(params.{value_key}) }}")
+
+            try:
 
                 document_body = {
                     "scripted_upsert": True,
                     "script": {
                         #"source": "ctx._source.%s.addAll(params.%s)" % (array_name, array_name),
-                        "source": "if (ctx._source.%s.contains(params.value)) { ctx.op = \"none\" } else { ctx._source.%s.add(params.value) }" % (array_name, array_name),
+                        "source": "\n".join(statements),
                         "lang": "painless",
-                        "params": { "value": value }
+                        "params": params_object
                     },
                 }
 
                 self._update(sample_id, document_body)
+            except ConflictError as e:
+                # Reraise so we can try again, only debug logging
+                self.logger.debug('Conflict updating array entry, possibly due concurrency. Staging for retry')
+                raise
+            except Exception as e:
+                self.logger.error('Error updating values for array %s on sample %s: %s' % (array_name, sample_id, str(e)))
+                raise
+
+            return True
 
     def _update(self, sample_id, document_body):
 
-        self.engine.update(
-            id=sample_id,
-            index=self.options.get('index'), 
-            doc_type=self.options.get('doctype'),
-            body=document_body,
-            request_timeout=DEFAULT_TIMEOUT
-            )
+        try:
+            self.engine.update(
+                id=sample_id,
+                index=self.options.get('index'), 
+                doc_type=self.options.get('doctype'),
+                body=document_body,
+                request_timeout=DEFAULT_TIMEOUT
+                )
+        except ConflictError as e:
+            # Reraise so we can try again, only debug logging
+            self.logger.debug('Conflict updating entry, possibly due concurrency. Staging for retry')
+            raise
+        except Exception as e:
+            self.logger.error('Error updating sample %s: %s' % (sample_id, str(e)))
+            raise

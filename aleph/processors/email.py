@@ -3,7 +3,7 @@ import email
 from aleph.common.base import Processor
 import chardet
 
-class Email(ProcessorBase):
+class Email(Processor):
 
     name = 'email'
     filetypes = ['message/rfc822']

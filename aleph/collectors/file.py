@@ -10,7 +10,7 @@ class File(Collector):
 
     def validate_options(self):
 
-        super(FileCollector, self).validate_options()
+        super(File, self).validate_options()
 
         path = self.options.get('path')
 

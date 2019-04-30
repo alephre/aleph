@@ -2,6 +2,7 @@ import pefile
 import datetime
 
 from itertools import zip_longest
+from slugify import slugify
 
 from aleph.common.base import Processor
 from aleph.common.utils import entropy, normalize_name
@@ -247,7 +248,7 @@ class PEInfo(Processor):
                     data['resources'].append(resource)
 
                     if self.options.get('extract_resources'):
-                        self.dispatch(resource_data, parent=sample['id'], filename=resource['path'])
+                        self.dispatch(resource_data, parent=sample['id'], filename='pe-resource-%s.res' % slugify(resource['path']).lower())
 
             return data
                             

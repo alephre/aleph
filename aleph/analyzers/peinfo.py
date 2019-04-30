@@ -522,8 +522,12 @@ class PEInfo(Analyzer):
         import_list = []
 
         # Grab all import names from PE
-        for dllname, imports in self.artifacts['pe_info']['imports'].items():
-            for imp in imports:
+        for import_entry in self.artifacts['pe_info']['imports']:
+            if 'imports' not in import_entry:
+                self.logger.warn('Import list for dll %s is missing' % import_entry['name'])
+                continue
+
+            for imp in import_entry['imports']:
                 import_list.append(imp['name'])
         
         # Iterate 

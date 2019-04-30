@@ -1,7 +1,7 @@
 from zipfile import ZipFile
-from aleph.processors.archive import ArchiveProcessor
+from aleph.processors.archive import Archive
 
-class ZipArchive(ArchiveProcessor):
+class ZipArchive(Archive):
 
     name = 'ziparchive'
     default_options = { 'enabled': True, 'passwords': [ 'infected', 'evil', 'virus', 'malicious' ] }

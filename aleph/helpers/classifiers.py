@@ -29,8 +29,8 @@ class Yara(Classifier):
 
     def setup(self):
 
-        if self.config.has_option('rules_file'):
-            self.rules_file = self.config.get('rules_file')
+        if self.options.has_option('rules_file'):
+            self.rules_file = self.options.get('rules_file')
 
     def detect(self, data):
         """ Identify file type by specialized Yara rule set where 'meta.file_type' stores abbreviated type names """

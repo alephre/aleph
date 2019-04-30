@@ -2,8 +2,8 @@
     "properties": {
         "size": { "type": "long" },
         "timestamp": { "type": "date" },
-        "mimetype": { "type": "keyword" },
-        "mimetype_str": { "type": "text" },
+        "filetype": { "type": "keyword" },
+        "filetype_str": { "type": "text" },
         "processors_completed": {
             "fields": {
                 "keyword": {

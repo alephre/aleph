@@ -24,7 +24,7 @@ def load_component(component_name, package_name):
                 break
         
         if not class_name:
-            raise ImportError("No suitable class found for %s '%s'" % (component_type, component_name))
+            raise ImportError("No suitable class found for '%s' in package '%s'" % (component_name, package_name))
         
         component = getattr(module, class_name)
         

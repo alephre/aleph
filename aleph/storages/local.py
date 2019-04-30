@@ -2,13 +2,13 @@ import os
 
 from aleph.common.base import Storage
 
-class LocalStorage(Storage):
+class Local(Storage):
 
     required_options = ['path']
 
     def validate_options(self):
 
-        super(LocalStorage, self).validate_options()
+        super(Local, self).validate_options()
 
         path = self.options.get('path')
 

@@ -2,7 +2,7 @@ import boto3
 
 from aleph.common.base import Storage
 
-class S3Storage(Storage):
+class S3S(Storage):
 
     """Store and retrieve samples from an AWS S3 Bucket"""
 

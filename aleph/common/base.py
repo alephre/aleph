@@ -19,7 +19,7 @@ class AlephTask(Task):
         return self.run(*args, **kwargs)
 
     def on_retry(self, exc, task_id, args, kwargs, einfo):
-        self.logger.warning('Task %s[%s] is being queued for retry: %s' % (self.name, task_id, einfo))
+        self.logger.info('Task %s[%s] is being queued for retry: %s' % (self.name, task_id, einfo))
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         self.logger.error('Task %s[%s] failed: %s' % (self.name, task_id, einfo))

@@ -17,7 +17,8 @@ class VirusTotal(Processor):
 
     default_options = {'report_sleep': 60, 'retry_count': 10, 'send_files': True, 'enabled': False}
     required_options = ['api_key']
-    filetypes_except = FILETYPES_ARCHIVE + ['text/url']
+
+    filetypes_exclude = FILETYPES_ARCHIVE + ['text/url']
 
     def setup(self):
 

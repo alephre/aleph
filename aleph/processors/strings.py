@@ -6,11 +6,11 @@ from collections import namedtuple
 from netaddr import IPNetwork
 
 from aleph.common.base import Processor
+from aleph.helpers.validators import validate_url, validate_domain, validate_ip
 from aleph.config.constants import FILETYPES_ARCHIVE, FILETYPES_META
 
 # String parsing functions from https://gist.github.com/williballenthin/8e3913358a7996eab9b96bd57fc59df2
 
-String = namedtuple("String", ["s", "offset"])
 ASCII_BYTE = rb" !\"#\$%&\'\(\)\*\+,-\./0123456789:;<=>\?@ABCDEFGHIJKLMNOPQRSTUVWXYZ\[\]\^_`abcdefghijklmnopqrstuvwxyz\{\|\}\\\~\t"
 
 # Some of the Regex below were taken from https://github.com/viper-framework/viper/blob/master/viper/modules/strings.py
@@ -36,7 +36,7 @@ CVE_REGEX = re.compile("(CVE-(19|20)\\d{2}-\\d{4,7})", re.I | re.S | re.M)
 PDB_REGEX = re.compile(r'\w+\.pdb$', re.IGNORECASE)
 
 # matches more content than original URL_REGEX pattern (hxxps, https, ftpx)
-URL_REGEX = re.compile(r'''(?i)\b((?:(hxxps?|https?|ftps?)://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?]))''', re.VERBOSE | re.MULTILINE)
+URL_REGEX = re.compile(r"(http(s)?:\/\/)(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)")
 
 # GET, POST, and Host: will always start at the beginning of the line in HTTP headers
 GET_POST_REGEX = re.compile('^(GET|POST)')
@@ -48,11 +48,7 @@ EMAIL_REGEX = re.compile(r'([\w\d\-\.]+)@{1}(([\w\d\-]{1,67})|([\w\d\-]+\.[\w\d\
 REGKEY_REGEX = re.compile('(HKEY_CLASSES_ROOT|HKEY_CURRENT_USER|HKEY_LOCAL_MACHINE|HKEY_USERS|HKEY_CURRENT_CONFIG|HKCR|HKCU|HKLM|HKU|HKCC)(/|\x5c\x5c)', re.IGNORECASE)
 REGKEY2_REGEX = re.compile(r'(CurrentVersion|Software\\Microsoft|Windows NT|Microsoft\\Interface)')
 
-# Updated file regex with common file types to match more file types and .* files
-FILE_REGEX = re.compile(r'([a-zA-Z0-9\s_\\.\-\(\):])+(docx|doc|csv|pdf|xlsx|xls|rtf|txt|pptx|ppt|html|php|js|exe|dll|jar|zip|zipx|7z|rar|tar|gz|jpeg|jpg|gif|png|tiff|bmp|flv|swf)')
-
-# Match files that use double extensions to trick users such as Document.docx.exe or something
-FILE_REGEX_DOUBLE_EXTENSIONS = re.compile(r'([a-zA-Z0-9\s_\\.\-\(\):])+(pdf|rar|zip|doc\w?|xls\w?|ppt\w?|xml|txt|lnk|jpg|js|jsp|jar|java|dll|exe)\.(pdf|rar|zip|doc\w?|xls\w?|ppt\w?|xml|txt|lnk|jpg|js|jsp|jar|java|dll|exe)')
+FILE_REGEX = re.compile(r"[\w,\s-]+(\.(docx|doc|csv|pdf|xlsx|xls|rtf|txt|pptx|ppt|html|php|js|exe|dll|jar|zip|zipx|7z|rar|tar|gz|jpeg|jpg|gif|png|tiff|bmp|flv|swf))+")
 
 # Hash patterns
 MD5_REGEX = re.compile("\\b[a-f0-9]{32}\\b", re.I | re.S | re.M)
@@ -76,7 +72,6 @@ MAC_ADDR_REGEX = re.compile(r'\b(?i)(?:[0-9A-F]{2}[:-]){5}(?:[0-9A-F]{2})\b')
 #        {'net': IPNetwork('192.0.0.0/24'), 'org': 'IETF Protocol Assignments per RFC 6890'},
 #        {'net': IPNetwork('192.0.2.0/24'), 'org': 'Documentation and examples per RFC 6890'},
 #        {'net': IPNetwork('192.88.99.0/24'), 'org': 'IPv6 to IPv4 relay per RFC 3068'},
-t
 #        {'net': IPNetwork('198.18.0.0/15'), 'org': 'Network benchmark tests per RFC 2544'},
 #        {'net': IPNetwork('198.51.100.0/24'), 'org': 'Documentation and examples per RFC 5737'},
 #        {'net': IPNetwork('203.0.113.0/24'), 'org': 'Documentation and examples per RFC 5737'},
@@ -89,18 +84,18 @@ t
 class Strings(Processor):
 
     name = 'strings'
-    filetypes_except = FILETYPES_ARCHIVE + FILETYPES_META + ['text/url']
+    filetypes_exclude = FILETYPES_ARCHIVE + FILETYPES_META + ['text/url']
 
     classifiers = {}
 
     def setup(self):
 
+        self.classifiers['files'] = (FILE_REGEX,)
+        self.classifiers['urls'] = (URL_REGEX,)
         self.classifiers['domains'] = (DOMAIN_REGEX,)
         self.classifiers['ips'] = (IPV4_REGEX, IPV6_REGEX)
-        self.classifiers['urls'] = (URL_REGEX,)
         self.classifiers['hashes'] = (MD5_REGEX, SHA1_REGEX, SHA256_REGEX, SHA512_REGEX, SSDEEP_REGEX)
         self.classifiers['cves'] = (CVE_REGEX,)
-        self.classifiers['files'] = (FILE_REGEX, FILE_REGEX_DOUBLE_EXTENSIONS)
         self.classifiers['emails'] = (EMAIL_REGEX,)
         self.classifiers['http_headers'] = (HOST_REGEX, USERAGENT_REGEX, GET_POST_REGEX)
         self.classifiers['win32'] = (REGKEY_REGEX, REGKEY2_REGEX, PDB_REGEX)
@@ -120,14 +115,14 @@ class Strings(Processor):
         reg = rb"([%s]{%d,})" % (ASCII_BYTE, n)
         ascii_re = re.compile(reg)
         for match in ascii_re.finditer(buf):
-            yield String(match.group().decode("ascii"), match.start())
+            yield {'string': match.group().decode("ascii"), 'offset': match.start()}
 
     def unicode_strings(self, buf, n=4):
         reg = rb"((?:[%s]\x00){%d,})" % (ASCII_BYTE, n)
         uni_re = re.compile(reg)
         for match in uni_re.finditer(buf):
             try:
-                yield String(match.group().decode("utf-16"), match.start())
+                yield {'string': match.group().decode("utf-16"), 'offset': match.start()}
             except UnicodeDecodeError:
                 pass
 
@@ -142,29 +137,52 @@ class Strings(Processor):
     def process(self, sample):
 
         result = {
-            'uncategorized': set()
+            'uncategorized': list()
         }
 
+        # Extract all strings (ASCII & Unicode)
         strings_found = list(self.strings(sample['data']))
 
+        # Preprocess strings
+        unique_strings = set(s['string'] for s in strings_found)
+        string_table = {s: [] for s in unique_strings}
         for s in strings_found:
+            string_table[s['string']].append(s['offset'])
+        string_list = [{'string': k, 'match': None, 'offsets': v} for k,v in string_table.items()]
+
+        # Parse strings
+        for s in string_list:
 
             string_classified = False
 
             for classifier, regexes in self.classifiers.items():
 
                 if classifier not in result:
-                    result[classifier] = set()
+                    result[classifier] = list()
 
                 for regex in regexes:
-                    if regex.search(s[0]):
-                        result[classifier].add(s)
+                    match = regex.search(s['string'])
+                    if match:
+                        s['match'] = match.group(0)
+                        result[classifier].append(s)
                         string_classified = True
+                        break
+
+                if string_classified:
+                    break
 
             if not string_classified:
-                result['uncategorized'].add(s)
+                result['uncategorized'].append(s)
 
-        # Extract Meta resources
+        # @IMPLEMENTME Have this being configurable, default True
+        self.extract_meta_resources(result, sample['id'])
+
+        # Convert sets to lists because JSON can't handle sets
+        return dict((k, list(v)) for k, v in result.items())
+
+
+    def extract_meta_resources(self, result, sample_id):
+
         meta_res = {
             'url': 'urls',
             'host': 'ips',
@@ -175,17 +193,28 @@ class Strings(Processor):
 
             if result_key in result.keys():
                 
+
                 metadata = {
                     'filetype': 'meta/%s' % meta_type,
                     'filetype_desc': '%s extracted from strings' % meta_type
                 }
 
                 for res in result[result_key]:
-                    filename = '%s.%s.meta' % (slugify(res).lower(), meta_type)
-                    filedata = res
 
-                    self.dispatch(filedata, metadata=metadata, filename=filename, parent=sample['id'])
-                    
+                    try:
+                        r_data = res['match']
 
-        # Convert sets to lists because JSON can't handle sets
-        return dict((k, list(v)) for k, v in result.items())
+                        # Pre-process data for validity
+                        if meta_type == 'domain' and not validate_domain(r_data):
+                            continue
+                        if meta_type == 'url' and not validate_url(r_data):
+                            continue
+                        if meta_type == 'host' and not validate_ip(r_data):
+                            continue
+                        
+                        filename = '%s.%s.meta' % (slugify(r_data).lower(), meta_type)
+                        filedata = bytes(r_data, 'utf-8')
+
+                        self.dispatch(filedata, metadata=metadata, filename=filename, parent=sample_id)
+                    except Exception as e:
+                        self.logger.err('Failed to dispatch sample \'%s\' from strings processor: %s' % (filename, str(e)))
