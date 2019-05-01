@@ -4,3 +4,5 @@ celerybeat-schedule.db
 celerybeat.pid
 .venv
 *.swo
+*.swn
+*.swp

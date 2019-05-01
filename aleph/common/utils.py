@@ -6,6 +6,7 @@ from hashlib import sha256
 from base64 import b64encode, b64decode
 from collections import Counter
 
+from aleph.common.exceptions import ProcessorSetupException, ProcessorRuntimeException
 from aleph.common.loader import load_processor, load_analyzer
 
 logger = get_task_logger(__name__)
@@ -74,18 +75,24 @@ def get_plugin(component_type, plugin_name):
 
 def run_plugin(component_type, plugin_name, args):
 
-    sample_id = args['id']
+    try:
+        sample_id = args['id']
 
-    if not sample_id:
-        raise AttributeError('Sample id not defined in args')
+        if not sample_id:
+            raise AttributeError('Sample id not defined in args')
 
-    plugin = get_plugin(component_type, plugin_name)()
+        plugin = get_plugin(component_type, plugin_name)()
 
-    if 'data' in args:
-        args['data'] = decode_data(args['data'])
+        if 'data' in args:
+            args['data'] = decode_data(args['data'])
+    except Exception as e:
+        raise ProcessorSetupException(e)
 
-    logger.debug("Running %s plugin" % plugin_name)
-    result = plugin.process(args)
+    try:
+        logger.debug("Running %s plugin" % plugin_name)
+        result = plugin.process(args)
+    except Exception as e:
+        raise ProcessorRuntimeException(e)
 
     metadata = {}
 

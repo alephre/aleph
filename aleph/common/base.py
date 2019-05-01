@@ -11,6 +11,7 @@ from abc import ABC
 
 from aleph.config import ConfigManager, settings
 from aleph.common.utils import encode_data, decode_data, call_task, to_es_date
+from aleph.common.exceptions import PluginException
 
 class AlephTask(Task):
 
@@ -23,7 +24,7 @@ class AlephTask(Task):
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         self.logger.error('Task %s[%s] failed: %s' % (self.name, task_id, einfo))
-        self.retry(exc=exc)
+        #self.retry(exc=exc)
 
 class Component(ABC):
 
@@ -116,9 +117,11 @@ class Plugin(Component):
         if not self.options.get('enabled'):
             return False
 
+        if 'metadata' not in sample.keys() or not sample['metadata']:
+            raise PluginException('Metadata not present for sample %s' % sample['id'])
+
         if 'filetype' not in sample['metadata']:
-            self.logger.error('filetype entry not present on sample %s' % sample['id'])
-            return False
+            raise PluginException('File type not present on sample %s' % sample['id'])
 
         # Check for filetype-specific plugins
         filetype = sample['metadata']['filetype']

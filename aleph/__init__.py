@@ -50,7 +50,7 @@ def setup_loggers(*args, **kwargs):
     version = settings.get('version')
 
     if 'format' not in log_options:
-        log_options['format'] = '%(asctime)s '+version+' %(name)s %(funcName)10s() %(levelname)s: %(message)s'
+        log_options['format'] = '%(asctime)s '+version+' %(name)s/%(funcName)s %(levelname)s: %(message)s'
 
     logger = logging.getLogger()
     formatter = logging.Formatter(log_options['format'])

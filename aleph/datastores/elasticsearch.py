@@ -1,7 +1,9 @@
 import logging 
 
 from elasticsearch import Elasticsearch as ES
-from elasticsearch.exceptions import ConflictError
+from elasticsearch.exceptions import ConflictError, ConnectionTimeout
+
+from aleph.common.exceptions import DatastoreTemporaryException, DatastoreSearchException, DatastoreStoreException, DatastoreRetrieveException
 from aleph.common.base import Datastore
 
 DEFAULT_TIMEOUT=30
@@ -41,9 +43,10 @@ class Elasticsearch(Datastore):
             self.logger.debug("Retrieving metadata for %s" % sample_id)
             result = self.engine.get(index=self.options.get('index'), doc_type=self.options.get('doctype'), id=sample_id)
             self.logger.debug("Metadata retrieved for %s" % sample_id)
+        except ConnectionTimeout as e:
+            raise DatastoreTemporaryException(e)
         except Exception as e:
-            self.logger.error('Error retrieving sample %s: %s' % (sample_id, str(e)))
-            return None
+            raise DatastoreRetrieveException(e)
 
         if not result or not isinstance(result, dict) or '_source' not in result.keys():
             return None
@@ -96,13 +99,10 @@ class Elasticsearch(Datastore):
 
             self.logger.debug("Metadata for %s stored on datastore" % sample_id)
             return True
-        except ConflictError as e:
-            # Reraise so we can try again, only debug logging
-            self.logger.debug('Conflict storing sample, possibly due concurrency. Staging for retry')
+        except DatastoreTemporaryException as e:
             raise
         except Exception as e:
-            self.logger.error('Error storing data for sample %s: %s' % (sample_id, str(e)))
-            raise
+            raise DatastoreStoreException(e)
 
     def update_task_states(self):
 
@@ -133,18 +133,19 @@ class Elasticsearch(Datastore):
                 
             for entry in result['hits']:
                 sample_id = entry['_id'] 
-                self.dispatch(sample_id, self.retrieve(sample_id))
+                sample_data = self.retrieve(sample_id)
+                if not sample_data:
+                    self.logger.warn('No sample data for sample %s. Skipping' % sample_id)
+                    continue
+                self.dispatch(sample_id, sample_data)
                 self.logger.debug("Tagging sample %s as 'scan_completed'" % sample_id)
                 self._update_array(sample_id, 'tags', ['scan_completed'])
 
             return True
-        except ConflictError as e:
-            # Reraise so we can try again, only debug logging
-            self.logger.debug('Conflict updating task states, possibly due concurrency. Staging for retry')
-            raise
+        except DatastoreTemporaryException as e:
+            raise e
         except Exception as e:
-            self.logger.error('Error updating task states: %s' % str(e))
-            raise
+            raise DatastoreStoreException(e)
 
     def _search(self, body):
 
@@ -155,9 +156,10 @@ class Elasticsearch(Datastore):
                 )
 
             return result
+        except ConnectionTimeout as e:
+            raise DatastoreTemporaryException(e)
         except Exception as e:
-            self.logger.error('Error searching index: %s' % str(e))
-            raise
+            raise DatastoreSearchException(e)
 
     def _update_array(self, sample_id, array_name, values):
 
@@ -187,13 +189,10 @@ class Elasticsearch(Datastore):
                 }
 
                 self._update(sample_id, document_body)
-            except ConflictError as e:
-                # Reraise so we can try again, only debug logging
-                self.logger.debug('Conflict updating array entry, possibly due concurrency. Staging for retry')
-                raise
+            except DatastoreTemporaryException as e:
+                raise e
             except Exception as e:
-                self.logger.error('Error updating values for array %s on sample %s: %s' % (array_name, sample_id, str(e)))
-                raise
+                raise DatastoreStoreException(e)
 
             return True
 
@@ -208,9 +207,6 @@ class Elasticsearch(Datastore):
                 request_timeout=DEFAULT_TIMEOUT
                 )
         except ConflictError as e:
-            # Reraise so we can try again, only debug logging
-            self.logger.debug('Conflict updating entry, possibly due concurrency. Staging for retry')
-            raise
+            raise DatastoreTemporaryException('Update conflict, possibly due concurrency.')
         except Exception as e:
-            self.logger.error('Error updating sample %s: %s' % (sample_id, str(e)))
-            raise
+            raise DatastoreStoreException(e)

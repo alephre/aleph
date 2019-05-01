@@ -3,7 +3,7 @@
         "size": { "type": "long" },
         "timestamp": { "type": "date" },
         "filetype": { "type": "keyword" },
-        "filetype_str": { "type": "text" },
+        "filetype_desc": { "type": "text" },
         "processors_completed": {
             "fields": {
                 "keyword": {

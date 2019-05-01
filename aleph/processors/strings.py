@@ -86,6 +86,8 @@ class Strings(Processor):
     name = 'strings'
     filetypes_exclude = FILETYPES_ARCHIVE + FILETYPES_META + ['text/url']
 
+    default_options = {'extract_meta_resources': True}
+
     classifiers = {}
 
     def setup(self):
@@ -174,8 +176,8 @@ class Strings(Processor):
             if not string_classified:
                 result['uncategorized'].append(s)
 
-        # @IMPLEMENTME Have this being configurable, default True
-        self.extract_meta_resources(result, sample['id'])
+        if self.options.get('extract_meta_resources'):
+            self.extract_meta_resources(result, sample['id'])
 
         # Convert sets to lists because JSON can't handle sets
         return dict((k, list(v)) for k, v in result.items())
