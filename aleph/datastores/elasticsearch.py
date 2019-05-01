@@ -43,17 +43,13 @@ class Elasticsearch(Datastore):
             self.logger.debug("Retrieving metadata for %s" % sample_id)
             result = self.engine.get(index=self.options.get('index'), doc_type=self.options.get('doctype'), id=sample_id)
             self.logger.debug("Metadata retrieved for %s" % sample_id)
+            if result and 'found' in result.keys() and result['found']:
+                return result['_source']
+            return None
         except ConnectionTimeout as e:
             raise DatastoreTemporaryException(e)
         except Exception as e:
             raise DatastoreRetrieveException(e)
-
-        if not result or not isinstance(result, dict) or '_source' not in result.keys():
-            return None
-
-        metadata = result['_source']
-
-        return metadata
 
     def store(self, sample_id, document):
 
@@ -182,7 +178,7 @@ class Elasticsearch(Datastore):
                     "scripted_upsert": True,
                     "script": {
                         #"source": "ctx._source.%s.addAll(params.%s)" % (array_name, array_name),
-                        "source": "\n".join(statements),
+                        "source": "\n".join(statements).lower(),
                         "lang": "painless",
                         "params": params_object
                     },

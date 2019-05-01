@@ -1,4 +1,5 @@
 from slugify import slugify 
+from tld import get_tld
 from dns.resolver import Resolver, NoAnswer
 
 from aleph.common.base import Processor
@@ -20,9 +21,6 @@ class Domain(Processor):
         # Basic domain parameters
         found_ips = set()
         metadata = {
-            'domain_part': None,
-            'tld': None,
-            'is_subdomain': False,
             'dns_records': {
                 'a': [],
                 'mx': [],
@@ -30,6 +28,13 @@ class Domain(Processor):
                 'txt': [],
             },
         }
+        # Parse domain
+        domain_info = get_tld(ascii_data, fix_protocol=True, fail_silently=True, as_object=True)
+        if domain_info:
+            metadata['domain'] = domain_info.domain
+            metadata['tld'] = domain_info.tld
+            metadata['fld'] = domain_info.fld
+            metadata['subdomain'] = domain_info.subdomain
 
         # Perform DNS lookups
         for record_type, records in metadata['dns_records'].items():

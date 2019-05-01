@@ -3,6 +3,7 @@ boto3
 celery
 dnspython
 elasticsearch
+geoip2
 netaddr
 pdfminer.six
 pefile
@@ -12,6 +13,7 @@ python-magic
 python-slugify
 pyyaml
 rarfile
+ratelim
 tld
 virustotal-api
 yara-python
