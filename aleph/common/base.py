@@ -121,7 +121,6 @@ class Plugin(Component):
             raise PluginException('Metadata not present for sample %s' % sample['id'])
 
         if 'filetype' not in sample['metadata']:
-            print(sample)
             raise PluginException('File type not present on sample %s' % sample['id'])
 
         # Check for filetype-specific plugins
