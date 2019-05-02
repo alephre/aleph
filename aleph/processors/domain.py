@@ -65,5 +65,5 @@ class Domain(Processor):
         filename = '%s.host.meta' % slugify(host).lower()
         filedata = bytes(host, 'utf-8')
 
-        self.dispatch(filedata, metadata=metadata, filename=filename, child=sample_id)
+        self.dispatch(filedata, metadata=metadata, filename=filename, parent=sample_id)
 

@@ -60,4 +60,4 @@ class Host(Processor):
         filename = '%s.location.meta' % slugify(latlng_str).lower()
         filedata = bytes(latlng_str, 'utf-8')
 
-        self.dispatch(filedata, metadata=metadata, filename=filename, child=sample_id)
+        self.dispatch(filedata, metadata=metadata, filename=filename, parent=sample_id)
