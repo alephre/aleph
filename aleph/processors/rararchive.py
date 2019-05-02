@@ -1,4 +1,5 @@
 from rarfile import RarFile
+
 from aleph.processors.archive import Archive
 
 class RarArchive(Archive):

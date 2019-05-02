@@ -1,0 +1,8 @@
+{
+    "properties": {
+        "size": { "type": "long" },
+        "timestamp": { "type": "date" },
+        "filetype": { "type": "keyword" },
+        "filetype_desc": { "type": "text" }
+    }
+}

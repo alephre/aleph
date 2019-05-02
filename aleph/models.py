@@ -10,8 +10,10 @@ from celery.utils.log import get_task_logger
 from abc import ABC
 
 from aleph.config import ConfigManager, settings
-from aleph.common.utils import encode_data, decode_data, call_task, to_es_date
-from aleph.common.exceptions import PluginException
+from aleph.helpers.tasks import call_task
+from aleph.helpers.dates import to_es_date
+from aleph.helpers.datautils import encode_data, decode_data
+from aleph.exceptions import PluginException
 
 class AlephTask(Task):
 
@@ -84,15 +86,23 @@ class Component(ABC):
             if not self.options.has_option(option):
                 raise KeyError('Required option "%s" not defined for %s handler' % (option, self.name))
 
-    def dispatch(self, data, metadata={}, filename=None, parent=None):
+    def dispatch(self, data, metadata={}, filename=None, parent=None, child=None):
 
         metadata['timestamp'] = to_es_date(datetime.utcnow())
 
-        metadata['known_filenames'] = [filename,]
-        metadata['parents'] = [parent,]
+        track_data = {}
+
+        if filename:
+            track_data['known_filenames'] = [filename,]
+
+        if parent:
+            track_data['parents'] = [parent,]
+
+        if child:
+            track_data['children'] = [child,]
        
         safe_data = encode_data(data)
-        call_task('aleph.tasks.process', args=[safe_data, metadata])
+        call_task('aleph.tasks.process', args=[safe_data, metadata, track_data])
 
     def setup(self):
         pass

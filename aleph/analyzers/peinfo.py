@@ -1,6 +1,6 @@
 import re
 
-from aleph.common.base import Analyzer
+from aleph.models import Analyzer
 from aleph.helpers.mitre_attack import *
 
 IMPORT_MIN_MATCHES = 2

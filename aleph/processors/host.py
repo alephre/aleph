@@ -3,7 +3,7 @@ import json
 from slugify import slugify 
 from ipaddress import ip_address, IPv6Address
 
-from aleph.common.base import Processor
+from aleph.models import Processor
 from aleph.helpers.geolocation import get_location_for_ip, get_asn_for_ip
 
 class Host(Processor):
@@ -38,27 +38,26 @@ class Host(Processor):
                 metadata['country'] = geo.country.name if geo.country.name else None
                 metadata['country_code'] = geo.country.iso_code if geo.country.iso_code else None
                 metadata['postal'] = geo.postal.code if geo.postal else None
-                metadata['latlng'] = [geo.location.latitude, geo.location.longitude] if geo.location else None
+                metadata['geo_coordinates'] = {'latitude': geo.location.latitude, 'longitude': geo.location.longitude} if geo.location else None
 
             if asn:
                 metadata['asn'] = asn.autonomous_system_number
                 metadata['as_org'] = asn.autonomous_system_organization
 
-        return metadata
+        if 'geo_coordinates' in metadata.keys():
 
-        if metadata['latlng']:
-
-            self.extract_location_sample(metadata['latlng'], sample['id'])
+            self.extract_location_sample(metadata['geo_coordinates'], sample['id'])
 
         return metadata
 
-    def extract_location_sample(self, latlng, parent_id):
+    def extract_location_sample(self, latlng, sample_id):
 
         metadata = {
             'filetype': 'meta/location',
             'filetype_desc': 'location extracted from IP address'
         }
-        filename = '%s.location.meta' % slugify(latlng).lower()
-        filedata = bytes(json.dumps(latlng), 'utf-8')
+        latlng_str = json.dumps(latlng)
+        filename = '%s.location.meta' % slugify(latlng_str).lower()
+        filedata = bytes(latlng_str, 'utf-8')
 
-        self.dispatch(filedata, metadata=metadata, filename=filename, parent=parent_id)
+        self.dispatch(filedata, metadata=metadata, filename=filename, child=sample_id)

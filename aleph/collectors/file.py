@@ -2,7 +2,7 @@ import os
 
 from time import time
 
-from aleph.common.base import Collector
+from aleph.models import Collector
 
 class File(Collector):
 

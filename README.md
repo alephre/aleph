@@ -38,8 +38,10 @@ The index must be created on ES and the aleph mapping applied to the index. This
 
 The example below creates and applies the mapping(assuming ES is on localhost):
 
-    $ curl -X PUT http://localhost:9200/aleph
-    $ curl -X PUT http://localhost:9200/aleph/_mapping/sample -d @mapping.json --header 'Content-Type: application/json'
+    $ curl -X PUT http://localhost:9200/aleph-samples
+    $ curl -X PUT http://localhost:9200/aleph-tracking
+    $ curl -X PUT http://localhost:9200/aleph-samples/_mapping/sample -d @sample.mapping.json --header 'Content-Type: application/json'
+    $ curl -X PUT http://localhost:9200/aleph-tracking/_mapping/sample -d @tracking.mapping.json --header 'Content-Type: application/json'
 
 # Running
 The example config file uses a local collector and local file storage. Please set the appropriate paths before launching Aleph

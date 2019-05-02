@@ -1,6 +1,6 @@
 from aleph import app
-from aleph.common.utils import run_plugin
-from aleph.common.exceptions import ProcessorSetupException, ProcessorRuntimeException, BaseException
+from aleph.helpers.plugins import run_plugin
+from aleph.exceptions import ProcessorSetupException, ProcessorRuntimeException, BaseException
 
 @app.task(bind=True)
 def run(self, processor_name, sample):

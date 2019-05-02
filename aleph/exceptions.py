@@ -1,4 +1,4 @@
-from aleph.common.mixins.exceptions import ExceptionCauseMixin
+from aleph.mixins.exceptions import ExceptionCauseMixin
 
 class BaseException(ExceptionCauseMixin, Exception):
     def __init__(self, exc):

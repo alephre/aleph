@@ -3,7 +3,7 @@ import magic
 
 from celery.utils.log import get_task_logger
 
-from aleph.common.base import Classifier
+from aleph.models import Classifier
 from aleph.config.constants import CLASSIFIER_YARA_DEFAULT_RULES
 
 logger = get_task_logger(__name__)

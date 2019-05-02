@@ -7,10 +7,10 @@
 import uuid
 import poplib
 
-from aleph.common.base import CollectorBase
+from aleph.models import Collector
 
 
-class POP3(CollectorBase):
+class POP3(Collector):
 
     required_options = ['pop_server', 'pop_user', 'pop_password', 'pop_port']
 

@@ -1,6 +1,6 @@
 # -*- coding: utf8 -*-
 
-from aleph.common.base import Processor
+from aleph.models import Processor
 
 from androguard.core.bytecodes.apk import APK
 

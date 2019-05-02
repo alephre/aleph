@@ -1,5 +1,5 @@
 from aleph import app
-from aleph.common.utils import run_plugin
+from aleph.helpers.plugins import run_plugin
 
 @app.task(bind=True)
 def run(self, analyzer_name, sample):

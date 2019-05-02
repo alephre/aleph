@@ -1,6 +1,6 @@
 from aleph import app
 from aleph.config import settings
-from aleph.common.loader import load_collector
+from aleph.helpers.loaders import load_collector
 
 COLLECTORS = [(name, load_collector(name)(options)) for name, options in settings.get('collector').items()] if settings.has_option('collector') else []
 

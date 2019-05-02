@@ -1,6 +1,6 @@
 import boto3
 
-from aleph.common.base import Collector
+from aleph.models import Collector
 
 
 class S3(Collector):

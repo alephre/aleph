@@ -7,7 +7,7 @@ from celery.signals import setup_logging, celeryd_init
 
 from aleph.config import ConfigManager, routes, settings
 from aleph.config.constants import CELERY_AUTODISCOVER_TASKS
-from aleph.common.base import AlephTask
+from aleph.models import AlephTask
 
 # Celery app creation
 app = Celery('aleph')

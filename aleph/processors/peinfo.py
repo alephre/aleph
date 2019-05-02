@@ -4,8 +4,9 @@ import datetime
 from itertools import zip_longest
 from slugify import slugify
 
-from aleph.common.base import Processor
-from aleph.common.utils import entropy, normalize_name
+from aleph.models import Processor
+from aleph.helpers.datautils import entropy
+from aleph.helpers.strings import normalize_name
 
 class PEInfo(Processor):
 

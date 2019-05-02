@@ -2,7 +2,7 @@ from slugify import slugify
 from tld import get_tld
 from dns.resolver import Resolver, NoAnswer
 
-from aleph.common.base import Processor
+from aleph.models import Processor
 
 class Domain(Processor):
 
@@ -56,7 +56,7 @@ class Domain(Processor):
 
         return metadata
 
-    def extract_host_sample(self, host, parent_id):
+    def extract_host_sample(self, host, sample_id):
 
         metadata = {
             'filetype': 'meta/host',
@@ -65,5 +65,5 @@ class Domain(Processor):
         filename = '%s.host.meta' % slugify(host).lower()
         filedata = bytes(host, 'utf-8')
 
-        self.dispatch(filedata, metadata=metadata, filename=filename, parent=parent_id)
+        self.dispatch(filedata, metadata=metadata, filename=filename, child=sample_id)
 

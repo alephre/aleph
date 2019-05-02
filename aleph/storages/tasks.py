@@ -2,8 +2,8 @@ import os
 
 from aleph import app
 from aleph.config import settings
-from aleph.common.loader import load_storage
-from aleph.common.utils import encode_data, decode_data
+from aleph.helpers.loaders import load_storage
+from aleph.helpers.datautils import encode_data, decode_data
 
 STORAGES = [(name, load_storage(name)(options)) for name, options in settings.get('storage').items()]
 

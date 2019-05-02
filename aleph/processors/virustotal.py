@@ -3,8 +3,9 @@ from operator import itemgetter
 
 from virus_total_apis import PublicApi as VirusTotal
 
-from aleph.common.utils import hash_data, in_string
-from aleph.common.base import Processor
+from aleph.models import Processor
+from aleph.helpers.datautils import hash_data
+from aleph.helpers.strings import in_string
 from aleph.config.constants import FILETYPES_ARCHIVE
 
 VT_RESPONSE_OK = 200

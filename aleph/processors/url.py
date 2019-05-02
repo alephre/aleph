@@ -1,7 +1,7 @@
 from slugify import slugify 
 from urllib.parse import urlparse
 
-from aleph.common.base import Processor
+from aleph.models import Processor
 
 class URL(Processor):
 
@@ -33,7 +33,7 @@ class URL(Processor):
 
         return metadata
 
-    def extract_domain_sample(self, domain, parent_id):
+    def extract_domain_sample(self, domain, sample_id):
 
         metadata = {
             'filetype': 'meta/domain',
@@ -42,5 +42,5 @@ class URL(Processor):
         filename = '%s.domain.meta' % slugify(domain).lower()
         filedata = bytes(domain, 'utf-8')
 
-        self.dispatch(filedata, metadata=metadata, filename=filename, parent=parent_id)
+        self.dispatch(filedata, metadata=metadata, filename=filename, child=sample_id)
 

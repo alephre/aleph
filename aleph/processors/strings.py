@@ -5,7 +5,7 @@ from slugify import slugify
 from collections import namedtuple
 from netaddr import IPNetwork
 
-from aleph.common.base import Processor
+from aleph.models import Processor
 from aleph.helpers.validators import validate_url, validate_domain, validate_ip
 from aleph.config.constants import FILETYPES_ARCHIVE, FILETYPES_META
 
@@ -59,27 +59,6 @@ SSDEEP_REGEX = re.compile("\\b\\d{2}:[A-Za-z0-9/+]{3,}:[A-Za-z0-9/+]{3,}\\b", re
 
 # mac address pattern
 MAC_ADDR_REGEX = re.compile(r'\b(?i)(?:[0-9A-F]{2}[:-]){5}(?:[0-9A-F]{2})\b')
-
-
-# @TODO: figure out if we want to process internal IPs or use this whitelist to remove reserved IPs
-# whitelist = [{'net': IPNetwork('10.0.0.0/8'), 'org': 'Private per RFC 1918'},
-#        {'net': IPNetwork('172.16.0.0/12'), 'org': 'Private per RFC 1918'},
-#        {'net': IPNetwork('192.168.0.0/16'), 'org': 'Private per RFC 1918'},
-#        {'net': IPNetwork('0.0.0.0/8'), 'org': 'Invalid per RFC 1122'},
-#        {'net': IPNetwork('127.0.0.0/8'), 'org': 'Loopback per RFC 1122'},
-#        {'net': IPNetwork('169.254.0.0/16'), 'org': 'Link-local per RFC 3927'},
-#        {'net': IPNetwork('100.64.0.0/10'), 'org': 'Shared address space per RFC 6598'},
-#        {'net': IPNetwork('192.0.0.0/24'), 'org': 'IETF Protocol Assignments per RFC 6890'},
-#        {'net': IPNetwork('192.0.2.0/24'), 'org': 'Documentation and examples per RFC 6890'},
-#        {'net': IPNetwork('192.88.99.0/24'), 'org': 'IPv6 to IPv4 relay per RFC 3068'},
-#        {'net': IPNetwork('198.18.0.0/15'), 'org': 'Network benchmark tests per RFC 2544'},
-#        {'net': IPNetwork('198.51.100.0/24'), 'org': 'Documentation and examples per RFC 5737'},
-#        {'net': IPNetwork('203.0.113.0/24'), 'org': 'Documentation and examples per RFC 5737'},
-#        {'net': IPNetwork('224.0.0.0/4'), 'org': 'IP multicast per RFC 5771'},
-#        {'net': IPNetwork('240.0.0.0/4'), 'org': 'Reserved per RFC 1700'},
-#        {'net': IPNetwork('255.255.255.255/32'), 'org': 'Broadcast address per RFC 919'}]
-
-
 
 class Strings(Processor):
 

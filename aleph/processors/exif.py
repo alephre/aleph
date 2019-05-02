@@ -1,7 +1,7 @@
 import piexif
 
 from io import BytesIO
-from aleph.common.base import Processor
+from aleph.models import Processor
 
 class EXIF(Processor):
 

@@ -3,8 +3,8 @@ from io import BytesIO
 from pdfminer.pdfparser import PDFParser
 from pdfminer.pdfdocument import PDFDocument
 
-from aleph.common.base import Processor
-from aleph.common.utils import normalize_name
+from aleph.models import Processor
+from aleph.helpers.strings import normalize_name
 
 
 class PDFInfo(Processor):

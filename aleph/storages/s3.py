@@ -1,6 +1,6 @@
 import boto3
 
-from aleph.common.base import Storage
+from aleph.models import Storage
 
 class S3S(Storage):
 

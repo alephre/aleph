@@ -1,7 +1,8 @@
 import re
 import email
-from aleph.common.base import Processor
 import chardet
+
+from aleph.models import Processor
 
 class Email(Processor):
 

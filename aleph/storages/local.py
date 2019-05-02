@@ -1,6 +1,6 @@
 import os
 
-from aleph.common.base import Storage
+from aleph.models import Storage
 
 class Local(Storage):
 
