@@ -1,4 +1,4 @@
-from ipaddress import ip_address
+from ipaddress import ip_address, IPv4Address, IPv6Address
 from tld import get_tld
 from urllib.parse import urlparse
 
@@ -12,10 +12,17 @@ def validate_url(url):
 
     return (parsed.netloc) 
 
-def validate_ip(ipaddr):
+def validate_ip(ipaddr, ip_versions=[4, 6]):
 
     try:
         ipa = ip_address(ipaddr)
-        return True
+
+        if isinstance(ipa, IPv4Address) and 4 in ip_versions:
+            return ipa
+
+        if isinstance(ipa, IPv6Address) and 6 in ip_versions:
+            return ipa
+
+        return None
     except ValueError:
         return False

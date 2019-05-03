@@ -19,11 +19,16 @@ class Host(Processor):
 
         metadata = {
             'ip': ascii_data,
+            'reverse_pointer': ip_info.reverse_pointer,
             'ip_version': 6 if isinstance(ip_info, IPv6Address) else 4,
             'is_global': ip_info.is_global,
             'is_private': ip_info.is_private,
             'is_loopback': ip_info.is_loopback,
             'is_link_local': ip_info.is_link_local,
+            'is_reserved': ip_info.is_reserved,
+            'is_multicast': ip_info.is_multicast,
+            'is_unspecified': ip_info.is_unspecified,
+
         }
 
         if ip_info.is_global and metadata['ip_version'] is 4:
