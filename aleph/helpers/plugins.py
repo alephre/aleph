@@ -1,5 +1,7 @@
 from celery.utils.log import get_task_logger
+from cachetools import cached, LRUCache
 
+from aleph.config.constants import CACHE_LRU_SIZE
 from aleph.config.constants import COMPONENT_TYPE_ANALYZER, COMPONENT_TYPE_PROCESSOR
 from aleph.config.constants import FIELD_SAMPLE_PROCESSOR_ITEMS, FIELD_SAMPLE_ANALYZER_ITEMS, FIELD_SAMPLE_ID, FIELD_SAMPLE_DATA
 from aleph.config.constants import FIELD_TRACK_TAGS, FIELD_TRACK_PLUGIN_COMPLETED 
@@ -10,18 +12,13 @@ from aleph.helpers.tasks import call_task
 
 logger = get_task_logger(__name__)
 
-PLUGIN_CACHE = {}
-
+@cached(cache=LRUCache(maxsize=CACHE_LRU_SIZE))
 def get_plugin(component_type, plugin_name):
 
     if component_type not in [COMPONENT_TYPE_ANALYZER, COMPONENT_TYPE_PROCESSOR]:
         raise ValueError('Invalid component')
 
     module_name = '%s_%s' % (plugin_name, component_type)
-
-    if module_name in PLUGIN_CACHE:
-        logger.debug('Loading %s plugin from cache' % module_name)
-        return PLUGIN_CACHE[module_name]
 
     components = {
         COMPONENT_TYPE_PROCESSOR: load_processor,
@@ -36,11 +33,9 @@ def get_plugin(component_type, plugin_name):
     logger.debug('Loading %s plugin from disk' % module_name)
 
     try:
-        PLUGIN_CACHE[module_name] = loader(plugin_name)
+        return loader(plugin_name)
     except Exception as e:
         raise ImportError('Error importing module %s: %s' % (plugin_name, str(e)))
-
-    return PLUGIN_CACHE[module_name]
 
 def run_plugin(component_type, plugin_name, args):
 

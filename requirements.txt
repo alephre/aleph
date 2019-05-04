@@ -1,5 +1,6 @@
 androguard
 boto3
+cachetools
 celery
 dnspython
 elasticsearch

@@ -17,6 +17,9 @@ See: https://www.elastic.co/guide/en/elasticsearch/reference/current/deb.html
     mkdir -p /opt/aleph
     cd /opt/aleph
 
+## Install python3 and deps
+    $ sudo apt-get install build-essential libffi-dev python3 python3-dev python3-pip libfuzzy-dev
+
 ## Create a virtual environment
     $ python3 -m .venv
 
