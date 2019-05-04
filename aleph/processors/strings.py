@@ -65,7 +65,7 @@ class Strings(Processor):
     name = 'strings'
     filetypes_exclude = FILETYPES_ARCHIVE + FILETYPES_META + ['text/url']
 
-    default_options = {'extract_meta_resources': True}
+    default_options = {'extract_meta_resources': True, 'extract_ipv6': False}
 
     classifiers = {}
 
@@ -170,6 +170,8 @@ class Strings(Processor):
             'domain': 'domains'
         }
 
+        ip_versions = [4, 6] if self.options.get('extract_ipv6') else [4]
+
         for meta_type, result_key in meta_res.items():
 
             if result_key in result.keys():
@@ -190,7 +192,7 @@ class Strings(Processor):
                             continue
                         if meta_type == 'url' and not validate_url(r_data):
                             continue
-                        if meta_type == 'host' and not validate_ip(r_data):
+                        if meta_type == 'host' and not validate_ip(r_data, ip_versions=ip_versions):
                             continue
                         
                         filename = '%s.%s.meta' % (slugify(r_data).lower(), meta_type)
