@@ -3,6 +3,8 @@ import json
 import logging
 
 from datetime import datetime
+from copy import copy
+from slugify import slugify
 
 from celery import Task
 from celery.utils.log import get_task_logger
@@ -13,7 +15,8 @@ from aleph.config import ConfigManager, settings
 from aleph.helpers.tasks import call_task
 from aleph.helpers.dates import to_es_date
 from aleph.helpers.datautils import encode_data, decode_data
-from aleph.exceptions import PluginException
+from aleph.helpers.iocs import default_values as ioc_default_values
+from aleph.exceptions import PluginException, ProcessorRuntimeException
 
 class AlephTask(Task):
 
@@ -150,9 +153,13 @@ class Plugin(Component):
             self.document_meta['tags'] = []
         self.document_meta['tags'].append(tag)
     
+    def cleanup(self):
+
+        self.document_meta.clear()
+
     def init(self):
 
-        self.document_meta = {}
+        self.document_meta.clear()
 
 class Processor(Plugin):
 
@@ -160,6 +167,37 @@ class Processor(Plugin):
     
     def process(self, sample):
         raise NotImplementedError('Process routine not implemented on %s plugin' % self.name)
+
+    def add_ioc(self, ioc_type, ioc_values):
+
+        if not 'iocs' in self.document_meta:
+            self.document_meta['iocs'] = {}
+
+        if ioc_type not in ioc_default_values.keys():
+            raise ValueError("IOC type %s is invalid", ioc_type)
+
+        if ioc_type not in self.document_meta['iocs'].keys():
+            self.document_meta['iocs'][ioc_type] = []
+
+        for value in ioc_values:
+            if value not in self.document_meta['iocs'][ioc_type]:
+                self.document_meta['iocs'][ioc_type].append(value)
+
+    def extract_meta_sample(self, meta_type, meta_data, sample_id):
+
+        try:
+            metadata = {
+                'filetype': 'meta/%s' % meta_type,
+                'filetype_desc': '%s meta sample' % meta_type
+            }
+
+            filename = '%s.%s.meta' % (slugify(meta_data).lower(), meta_type)
+            filedata = bytes(meta_data, 'utf-8')
+
+            self.dispatch(filedata, metadata=metadata, filename=filename, parent=sample_id)
+        except Exception as e:
+            raise ProcessorRuntimeException('Failed to create meta sample: %s' % str(e))
+
 
 class Analyzer(Plugin):
 
@@ -172,12 +210,14 @@ class Analyzer(Plugin):
     flags = []
     indicators = []
     artifacts = {}
+    iocs = {}
 
     def setup(self):
 
         self.flags = []
         self.indicators = []
         self.artifacts = {}
+        self.iocs = {}
 
     def add_indicator(self, indicator):
         self.indicators.append(indicator)
@@ -218,8 +258,12 @@ class Analyzer(Plugin):
         if 'artifacts' not in sample['metadata']:
             raise KeyError('Sample artifacts not present in metadata')
 
+        if 'iocs' not in sample['metadata']:
+            raise KeyError('Sample IOCs not present in metadata')
+
         self.sample = sample
         self.artifacts = self.sample['metadata']['artifacts']
+        self.iocs = self.sample['metadata']['iocs']
 
     def process(self, sample):
 

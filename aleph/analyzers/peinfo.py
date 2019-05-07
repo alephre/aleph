@@ -389,29 +389,25 @@ class PEInfo(Analyzer):
         # Check known-packer sections
         self.check_known_packers()
         
-        # Check for evil strings
-        self.check_evil_strings()
+        # Check for evil IOCs
+        self.check_evil_iocs()
 
         """ Correlation Processing """
         self.check_ransomware()
         self.check_dropper()
 
-    def check_evil_strings(self):
+    def check_evil_iocs(self):
 
-        if 'strings' not in self.artifacts.keys():
-            return False
-        
         # Cryptocurrency wallet addresses on binaries are usually not good
-        if 'cryptocurrency_wallet' in self.artifacts['strings'].keys() and \
-            len(self.artifacts['strings']['cryptocurrency_wallet']) > 0:
+        if len(self.iocs['bitcoin_addresses']) > 0:
 
-            wallet_addrs = ', '.join(set(self.artifacts['strings']['cryptocurrency_wallet']))
+            wallet_addrs = ', '.join(set(self.iocs['bitcoin_addresses']))
 
             self.add_indicator('string_cryptowallet_addr')
             self.add_flag(
                 'This sample may be a ransomware',
                 'The following cryptocurrency wallet addresses were identified: %s' % wallet_addrs,
-                'evil_strings',
+                'evil_iocs',
                 'suspicious',
             )
 

@@ -4,9 +4,10 @@ from elasticsearch import Elasticsearch as ES
 from elasticsearch.exceptions import ConflictError, ConnectionTimeout
 from urllib3.exceptions import ReadTimeoutError
 
-from aleph.config.constants import FIELD_SAMPLE_PROCESSOR_ITEMS, FIELD_SAMPLE_ANALYZER_ITEMS, FIELD_SAMPLE_SIZE, FIELD_SAMPLE_FILETYPE, FIELD_SAMPLE_FILETYPE_DESC, FIELD_SAMPLE_TIMESTAMP
+from aleph.config.constants import FIELD_SAMPLE_PROCESSOR_ITEMS, FIELD_SAMPLE_ANALYZER_ITEMS, FIELD_SAMPLE_SIZE, FIELD_SAMPLE_FILETYPE, FIELD_SAMPLE_FILETYPE_DESC, FIELD_SAMPLE_TIMESTAMP, FIELD_SAMPLE_IOCS
 from aleph.exceptions import DatastoreTemporaryException, DatastoreSearchException, DatastoreStoreException, DatastoreRetrieveException
 from aleph.models import Datastore
+from aleph.helpers.iocs import default_values as ioc_default_values
 
 DEFAULT_TIMEOUT=30
 
@@ -78,7 +79,8 @@ class Elasticsearch(Datastore):
                 FIELD_SAMPLE_FILETYPE: None,
                 FIELD_SAMPLE_FILETYPE_DESC: None,
                 FIELD_SAMPLE_PROCESSOR_ITEMS: {},
-                FIELD_SAMPLE_ANALYZER_ITEMS: {}
+                FIELD_SAMPLE_ANALYZER_ITEMS: {},
+                FIELD_SAMPLE_IOCS: ioc_default_values,
             }
 
             upsert = {**default_values, **document}

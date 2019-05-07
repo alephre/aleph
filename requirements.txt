@@ -6,6 +6,8 @@ dnspython
 elasticsearch
 geocoder
 geoip2
+ioc-finder
+iocextract
 netaddr
 pdfminer.six
 pefile
@@ -17,5 +19,6 @@ pyyaml
 rarfile
 ssdeep
 tld
+validators
 virustotal-api
 yara-python

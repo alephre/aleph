@@ -1,6 +1,5 @@
 import json
 
-from slugify import slugify 
 from ipaddress import ip_address, IPv6Address
 
 from aleph.models import Processor
@@ -51,18 +50,6 @@ class Host(Processor):
 
         if 'geo_coordinates' in metadata.keys():
 
-            self.extract_location_sample(metadata['geo_coordinates'], sample['id'])
+            self.extract_meta_sample('location', json.dumps(metadata['geo_coordinates']), sample['id'])
 
         return metadata
-
-    def extract_location_sample(self, latlng, sample_id):
-
-        metadata = {
-            'filetype': 'meta/location',
-            'filetype_desc': 'location extracted from IP address'
-        }
-        latlng_str = json.dumps(latlng)
-        filename = '%s.location.meta' % slugify(latlng_str).lower()
-        filedata = bytes(latlng_str, 'utf-8')
-
-        self.dispatch(filedata, metadata=metadata, filename=filename, parent=sample_id)

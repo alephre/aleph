@@ -1,5 +1,7 @@
 import logging
 
+from copy import copy
+
 from aleph import app
 from aleph.config import settings
 from aleph.config.constants import COMPONENT_TYPE_PROCESSOR, COMPONENT_TYPE_ANALYZER

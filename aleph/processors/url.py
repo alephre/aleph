@@ -1,4 +1,3 @@
-from slugify import slugify 
 from urllib.parse import urlparse
 
 from aleph.models import Processor
@@ -29,18 +28,6 @@ class URL(Processor):
             'port': url_object.port,
         }
 
-        self.extract_domain_sample(url_object.netloc, sample['id'])
+        self.extract_meta_sample('domain', url_object.netloc, sample['id'])
 
         return metadata
-
-    def extract_domain_sample(self, domain, sample_id):
-
-        metadata = {
-            'filetype': 'meta/domain',
-            'filetype_desc': 'domain extracted from url'
-        }
-        filename = '%s.domain.meta' % slugify(domain).lower()
-        filedata = bytes(domain, 'utf-8')
-
-        self.dispatch(filedata, metadata=metadata, filename=filename, parent=sample_id)
-

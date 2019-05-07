@@ -1,9 +1,11 @@
 from celery.utils.log import get_task_logger
 from cachetools import cached, LRUCache
 
+from copy import deepcopy
+
 from aleph.config.constants import CACHE_LRU_SIZE
 from aleph.config.constants import COMPONENT_TYPE_ANALYZER, COMPONENT_TYPE_PROCESSOR
-from aleph.config.constants import FIELD_SAMPLE_PROCESSOR_ITEMS, FIELD_SAMPLE_ANALYZER_ITEMS, FIELD_SAMPLE_ID, FIELD_SAMPLE_DATA
+from aleph.config.constants import FIELD_SAMPLE_PROCESSOR_ITEMS, FIELD_SAMPLE_ANALYZER_ITEMS, FIELD_SAMPLE_ID, FIELD_SAMPLE_DATA, FIELD_SAMPLE_IOCS
 from aleph.config.constants import FIELD_TRACK_TAGS, FIELD_TRACK_PLUGIN_COMPLETED 
 from aleph.exceptions import ProcessorSetupException, ProcessorRuntimeException
 from aleph.helpers.datautils import decode_data
@@ -39,6 +41,9 @@ def get_plugin(component_type, plugin_name):
 
 def run_plugin(component_type, plugin_name, args):
 
+    result = {}
+    document_meta = {}
+
     try:
         sample_id = args[FIELD_SAMPLE_ID]
 
@@ -55,8 +60,11 @@ def run_plugin(component_type, plugin_name, args):
     try:
         logger.debug("Running %s plugin" % plugin_name)
         result = plugin.process(args)
+        document_meta = deepcopy(plugin.document_meta)
     except Exception as e:
         raise ProcessorRuntimeException(e)
+    finally:
+        plugin.cleanup()
 
     metadata = {}
     track_data = {}
@@ -70,9 +78,13 @@ def run_plugin(component_type, plugin_name, args):
 
     metadata[component_key] = {plugin.name: result}
 
-    # Add tags to main document metadata
-    if FIELD_TRACK_TAGS in plugin.document_meta:
-        track_data[FIELD_TRACK_TAGS] = plugin.document_meta[FIELD_TRACK_TAGS]
+    # Add tags to main document trackingdata
+    if FIELD_TRACK_TAGS in document_meta:
+        track_data[FIELD_TRACK_TAGS] = document_meta[FIELD_TRACK_TAGS]
+
+    # Add iocs to main document metadata
+    if FIELD_SAMPLE_IOCS in document_meta:
+        metadata[FIELD_SAMPLE_IOCS] = document_meta[FIELD_SAMPLE_IOCS]
 
     # Add current plugin to metadata
     track_data[FIELD_TRACK_PLUGIN_COMPLETED % component_type] = [plugin.name,]

@@ -1,17 +1,22 @@
-from slugify import slugify 
 from tld import get_tld
-from dns.resolver import Resolver, NoAnswer
+from dns.resolver import Resolver, NoAnswer, NoNameservers, NXDOMAIN
+from dns.exception import Timeout
 
 from aleph.models import Processor
+from aleph.exceptions import ProcessorRuntimeException
+from aleph.helpers.validators import validate_domain, validate_ip
 
 class Domain(Processor):
 
     filetypes = ['meta/domain']
+
+    #default_options = { 'nameservers': ['8.8.8.8', '8.8.4.4'] }
     resolver = None
 
     def setup(self):
 
         self.resolver = Resolver()
+        #self.resolver.nameservers = self.options.get('nameservers')
 
     def process(self, sample):
 
@@ -20,7 +25,10 @@ class Domain(Processor):
 
         # Basic domain parameters
         found_ips = set()
+        found_domains = set()
+
         metadata = {
+            'entry_data': ascii_data,
             'dns_records': {
                 'a': [],
                 'mx': [],
@@ -38,32 +46,41 @@ class Domain(Processor):
 
         # Perform DNS lookups
         for record_type, records in metadata['dns_records'].items():
+
             try:
+
                 dns_query = self.resolver.query(ascii_data, record_type.upper())
+
                 for dns_record in dns_query:
+
                     record_str = str(dns_record)
-                    records.append(record_str)
+                    record_host = record_str
+
+                    if record_type is 'mx':
+                        mx_parts = record_str.split(' ')
+                        record_host = mx_parts[1][:-1] # cut off trailing dot
+                        records.append({'host': record_host, 'prio': mx_parts[0]})
+                    elif record_type is 'ns':
+                        record_host = record_str[:-1] # cut off trailing dot
+                        records.append(record_host)
+                    else:
+                        records.append(record_host)
+
                     if record_type is not 'txt':
-                        found_ips.add(record_str)
-            except NoAnswer as e:
-                continue # No answer to given record type
-            except Exception as e:
-                self.logger.error('Error performing dns query: %s' % str(e))
-                return False
+                        if validate_ip(record_host):
+                            found_ips.add(record_host)
+                        elif validate_domain(record_host):
+                            found_domains.add(record_host)
+
+            except (NoNameservers, NoAnswer, NXDOMAIN, Timeout) as e:
+                self.logger.warn('Error performing dns query: %s' % str(e))
 
         for ip_addr in found_ips:
-            self.extract_host_sample(ip_addr, sample['id'])
+            self.extract_meta_sample('host', ip_addr, sample['id'])
+
+        # @FIXME not working, crazy recursion
+        #for domain in found_domains:
+        #    if domain is not metadata['entry_data']:
+        #        self.extract_meta_sample('domain', domain, sample['id'])
 
         return metadata
-
-    def extract_host_sample(self, host, sample_id):
-
-        metadata = {
-            'filetype': 'meta/host',
-            'filetype_desc': 'host extracted from domain'
-        }
-        filename = '%s.host.meta' % slugify(host).lower()
-        filedata = bytes(host, 'utf-8')
-
-        self.dispatch(filedata, metadata=metadata, filename=filename, parent=sample_id)
-
