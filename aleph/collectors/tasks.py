@@ -8,7 +8,7 @@ COLLECTORS = [(name, load_collector(name)(options)) for name, options in setting
 def collect(self):
 
     for name, collector in COLLECTORS:
-        self.logger.info("Running %s collector" % name)
+        self.logger.debug("Running %s collector" % name)
         try:
             collector.collect()
         except Exception as e:

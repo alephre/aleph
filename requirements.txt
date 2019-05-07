@@ -2,6 +2,7 @@ androguard
 boto3
 cachetools
 celery
+coloredlogs
 dnspython
 elasticsearch
 geocoder

@@ -68,7 +68,10 @@ class ExceptionCauseMixin(Exception):
         return ret
 
     def get_exception_text(self):
-        exc_type, exc_value, exc_tb = sys.exc_info()
+
+        if not self.original_exc_info['value']:
+            return self._get_message()
+
         fname = os.path.split(self.original_exc_info['tb'].tb_frame.f_code.co_filename)[1]
         return f"{self.original_exc_info['type'].__name__}: {self.original_exc_info['value']} [{fname}:{self.original_exc_info['tb'].tb_lineno}]"
 

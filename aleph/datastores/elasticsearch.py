@@ -1,15 +1,14 @@
 import logging 
+import socket
 
 from elasticsearch import Elasticsearch as ES
 from elasticsearch.exceptions import ConflictError, ConnectionTimeout
-from urllib3.exceptions import ReadTimeoutError
+from urllib3.exceptions import ReadTimeoutError, ProtocolError
 
 from aleph.config.constants import FIELD_SAMPLE_PROCESSOR_ITEMS, FIELD_SAMPLE_ANALYZER_ITEMS, FIELD_SAMPLE_SIZE, FIELD_SAMPLE_FILETYPE, FIELD_SAMPLE_FILETYPE_DESC, FIELD_SAMPLE_TIMESTAMP, FIELD_SAMPLE_IOCS
 from aleph.exceptions import DatastoreTemporaryException, DatastoreSearchException, DatastoreStoreException, DatastoreRetrieveException
 from aleph.models import Datastore
 from aleph.helpers.iocs import default_values as ioc_default_values
-
-DEFAULT_TIMEOUT=30
 
 class Elasticsearch(Datastore):
 
@@ -19,15 +18,23 @@ class Elasticsearch(Datastore):
         'index': 'aleph-samples',
         'tracking_index': 'aleph-tracking',
         'doctype': 'sample',
+        'connection_timeout': 10.0,
     }
 
     def setup(self):
         try:
             self.logger.debug("Connecting to elasticsearch at %s:%d" % (self.options.get('host'), self.options.get('port')))
-            self.engine = ES([{
-                'host': self.options.get('host'),
-                'port': self.options.get('port'),
-            }])
+
+            self.engine = ES(
+                [{
+                    'host': self.options.get('host'),
+                    'port': self.options.get('port'),
+                }],
+                #sniff_on_start=True,
+                #sniff_on_connection_fail=True,
+                #sniffer_timeout=60,
+                timeout=self.options.get('connection_timeout'),
+            )
 
             if not self.engine.ping():
                 self.logger.error("Error connecting to elasticsearch at %s:%d" % (self.options.get('host'), self.options.get('port')))
@@ -47,8 +54,8 @@ class Elasticsearch(Datastore):
             if not index:
                 index = self.options.get('index')
 
-            return self.engine.get(index=index, doc_type=self.options.get('doctype'), id=sample_id)
-        except (ReadTimeoutError, ConnectionTimeout) as e:
+            return self.engine.get(index=index, doc_type=self.options.get('doctype'), request_timeout=self.options.get('connection_timeout'), id=sample_id)
+        except (ProtocolError, ReadTimeoutError, ConnectionTimeout, socket.timeout) as e:
             raise DatastoreTemporaryException(e)
         except Exception as e:
             raise DatastoreRetrieveException(e)
@@ -148,11 +155,13 @@ class Elasticsearch(Datastore):
             self.logger.debug("Tracking data for %s stored on datastore" % sample_id)
             return True
         except DatastoreTemporaryException as e:
-            raise
+            raise e
         except Exception as e:
             raise DatastoreStoreException(e)
 
     def update_task_states(self):
+
+        #@IMPLEMENTME add analysis_completed tag 
 
         track_index = self.options.get('tracking_index')
 
@@ -185,10 +194,10 @@ class Elasticsearch(Datastore):
                 sample_id = entry['_id'] 
                 sample_data = self.retrieve(sample_id)
                 if not sample_data:
-                    self.logger.warn('No sample data for sample %s. Skipping' % sample_id)
+                    self.logger.warn('Sample %s is not ready yet. Skipping' % sample_id)
                     continue
                 self.dispatch(sample_id, sample_data)
-                self.logger.debug("Tagging sample %s as 'scan_completed'" % sample_id)
+                self.logger.info("Processing complete for %s" % sample_id)
                 self._update_array(sample_id, 'tags', ['scan_completed'], index=track_index)
 
             return True
@@ -200,17 +209,18 @@ class Elasticsearch(Datastore):
     def _search(self, body, index=None):
 
         if not index:
-            index = self.options.get('indexs')
+            index = self.options.get('index')
 
         try:
             result = self.engine.search(
                 index=index,
-                doc_type=self.options.get('doctype'), body=body
+                doc_type=self.options.get('doctype'), body=body,
+                request_timeout=self.options.get('connection_timeout')
                 )
 
             return result
-        except (ReadTimeoutError, ConnectionTimeout) as e:
-            raise DatastoreTemporaryException(e)
+        except (ProtocolError, ReadTimeoutError, ConnectionTimeout, socket.timeout) as e:
+            raise DatastoreTemporaryException('Timeout searching backend.')
         except Exception as e:
             raise DatastoreSearchException(e)
 
@@ -256,8 +266,10 @@ class Elasticsearch(Datastore):
                 index=index, 
                 doc_type=self.options.get('doctype'),
                 body=document_body,
-                request_timeout=DEFAULT_TIMEOUT
+                request_timeout=self.options.get('connection_timeout')
                 )
+        except (ProtocolError, ReadTimeoutError, ConnectionTimeout, socket.timeout) as e:
+            raise DatastoreTemporaryException("Backend timeout.")
         except ConflictError as e:
             raise DatastoreTemporaryException('Update conflict, possibly due concurrency.')
         except Exception as e:

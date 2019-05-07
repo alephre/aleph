@@ -10,7 +10,7 @@ def update_task_states(self):
 
     for name, datastore in DATASTORES:
         try:
-            self.logger.info("Calling 'update_task_states' on %s datastore" % name)
+            self.logger.debug("Calling 'update_task_states' on %s datastore" % name)
             res = datastore.update_task_states()
         except DatastoreTemporaryException as e:
             self.logger.warn("Datastore update_task_states action failed: %s. Staging for retry" % e.get_exception_text())
@@ -27,7 +27,7 @@ def store(self, sample_id, metadata):
 
     for name, datastore in DATASTORES:
         try:
-            self.logger.info("Storing metadata for %s on datastore" % sample_id)
+            self.logger.debug("Storing metadata for %s on datastore" % sample_id)
             res = datastore.store(sample_id, metadata)
             self.logger.debug("Metadata for %s stored on datastore" % sample_id)
         except DatastoreTemporaryException as e:
@@ -45,7 +45,7 @@ def track(self, sample_id, metadata):
 
     for name, datastore in DATASTORES:
         try:
-            self.logger.info("Storing tracking data for %s on datastore" % sample_id)
+            self.logger.debug("Storing tracking data for %s on datastore" % sample_id)
             res = datastore.track(sample_id, metadata)
             self.logger.debug("Tracking data for %s stored on datastore" % sample_id)
         except DatastoreTemporaryException as e:

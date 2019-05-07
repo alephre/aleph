@@ -36,17 +36,17 @@ def process(self, sample_data, metadata, track_data={}):
     binary_data = decode_data(sample_data)
     sample_id = hash_data(binary_data)
 
-    self.logger.info("Recieved sample %s for processing" % sample_id)
-
     # Autodetect filetype if not provided
     if FIELD_SAMPLE_FILETYPE not in metadata.keys():
         metadata[FIELD_SAMPLE_FILETYPE], metadata[FIELD_SAMPLE_FILETYPE_DESC] = detect_filetype(binary_data)
 
     metadata[FIELD_SAMPLE_SIZE] = len(binary_data)
 
+    self.logger.info("Recieved sample %s (%s) for processing" % (sample_id, metadata[FIELD_SAMPLE_FILETYPE]))
+
     # Store sample
     call_task('aleph.storages.tasks.store', args=[sample_id, sample_data])
-    self.logger.info("Sample %s sent to storage" % sample_id)
+    self.logger.debug("Sample %s sent to storage" % sample_id)
 
     # Prepare and send to processing pipeline
     sample = {

@@ -50,3 +50,18 @@ FIELD_TRACK_PLUGIN_DISPATCHED = '%ss_dispatched'
 FIELD_TRACK_PLUGIN_COMPLETED = '%ss_completed'
 
 CACHE_LRU_SIZE = 32
+
+ASCII_ART_ALEPH_LOGO = r"""
+
+          @@        
+         @@@@           aleph | sample analysis pipeline
+        @@  @@          %s
+       @@    @@      
+      @@      @@        by Aleph Labs <http://alephlabs.io>
+     @@        @@       
+    @@          @@
+   @@            @@     Dissecting files for better threat intelligence since 2012
+  @@              @@  
+ @@  @@@@@@@@@@@@@@@@ 
+
+"""

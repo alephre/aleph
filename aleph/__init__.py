@@ -1,13 +1,17 @@
 #!/usr/bin/env python
 
+import coloredlogs
 import logging
+import sys
 
 from celery import Celery
-from celery.signals import setup_logging, celeryd_init
+from celery.signals import setup_logging, celeryd_init, worker_ready, celeryd_after_setup #, after_setup_logger
 
 from aleph.config import ConfigManager, routes, settings
-from aleph.config.constants import CELERY_AUTODISCOVER_TASKS
+from aleph.config.constants import CELERY_AUTODISCOVER_TASKS, ASCII_ART_ALEPH_LOGO
 from aleph.models import AlephTask
+
+logger = logging.getLogger(__name__)
 
 # Celery app creation
 app = Celery('aleph')
@@ -21,6 +25,7 @@ app.conf.update({
     'broker_url': settings.get('transport'),
     'result_backend': 'rpc://' if not settings.has_option('result_backend') else settings.get('result_backend'),
     'broker_transport_options': {'confirm_publish': True},
+    'worker_hijack_root_logger': False,
     'event_timezone': 'UTC',
     'task_acks_late': True,
     'task_acks_on_failure_or_timeout': False,
@@ -39,9 +44,10 @@ app.conf.update({
 # Autodiscover tasks
 app.autodiscover_tasks(CELERY_AUTODISCOVER_TASKS, force=True)
 
-#@after_setup_logger.connect
 @setup_logging.connect
 def setup_loggers(*args, **kwargs):
+#@after_setup_logger.connect
+#def setup_loggers(logger, *args, **kwargs):
 
     if not settings.has_option('logging'):
         return False
@@ -52,23 +58,56 @@ def setup_loggers(*args, **kwargs):
     if 'format' not in log_options:
         log_options['format'] = '%(asctime)s '+version+' %(name)s/%(funcName)s %(levelname)s: %(message)s'
 
-    logger = logging.getLogger()
-    formatter = logging.Formatter(log_options['format'])
+    if 'level' not in log_options:
+        log_options['level'] = 'INFO'
 
-    # Set-up basic stream handler
-    sh = logging.StreamHandler()
-    sh.setFormatter(formatter)
-    logger.addHandler(sh)
 
+    # Install colored console handler
+    coloredlogs.install(level=log_options['level'], fmt=log_options['format'])
+
+    # Add file handler if configured
     if 'path' in log_options:
         # FileHandler
         fh = logging.FileHandler(log_options['path'])
+        formatter = logging.Formatter(log_options['format'])
         fh.setFormatter(formatter)
-        fh.setLevel(logging.DEBUG)
         logger.addHandler(fh)
+        logger.debug("Logging FileHandler registered succesfully.")
+
+    # Install filter on root logger handlers
+    class AlephLogsFilter(logging.Filter):
+        def filter(self, record):
+
+            return record.name.startswith('aleph')
+
+    root_logger = logging.getLogger()
+
+    for handler in root_logger.handlers:
+        handler.addFilter(AlephLogsFilter())
+
+    logger.debug('Logging setup successful.')
+
 
 @celeryd_init.connect
 def init_app(sender, instance, **kwargs):
     settings.set('worker_name', '{0}'.format(sender))
     with open('version.txt', 'r') as version:
         settings.set('version', version.read().strip())
+
+@celeryd_after_setup.connect
+def after_setup_cb(*args, **kwargs):
+    print(ASCII_ART_ALEPH_LOGO % settings.get('version'))
+    logger.info("Aleph worker is initializing.")
+
+@worker_ready.connect
+def worker_ready_cb(*args, **kwargs):
+    logger.info("Aleph worker is online.")
+
+# Define global exception handler
+def exception_handler(exception_type, exception, traceback, debug_hook=sys.excepthook):
+    #if log_options['level'] is 'DEBUG':
+    #    debug_hook(exception_type, exception, traceback)
+    #else:
+    logger.error("BAZINGA %s: %s" % (exception_type.__name__, exception))
+
+sys.excepthook = exception_handler
