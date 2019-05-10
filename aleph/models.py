@@ -180,8 +180,9 @@ class Processor(Plugin):
             self.document_meta['iocs'][ioc_type] = []
 
         for value in ioc_values:
-            if value not in self.document_meta['iocs'][ioc_type]:
-                self.document_meta['iocs'][ioc_type].append(value)
+            clean_value = str(value).lower()
+            if clean_value not in self.document_meta['iocs'][ioc_type]:
+                self.document_meta['iocs'][ioc_type].append(clean_value)
 
     def extract_meta_sample(self, meta_type, meta_data, sample_id):
 

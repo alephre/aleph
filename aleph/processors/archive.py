@@ -21,7 +21,7 @@ class Archive(Processor):
 
         with self.engine(src, 'r') as archive:
             if password:
-                archive.setpassword(password)
+                archive.setpassword(bytes(password, 'utf-8'))
 
             archive.extractall(dest)
 

@@ -49,17 +49,20 @@ def setup_loggers(*args, **kwargs):
 #@after_setup_logger.connect
 #def setup_loggers(logger, *args, **kwargs):
 
+    root_logger = logging.getLogger()
+
     if not settings.has_option('logging'):
         return False
 
     log_options = settings.get('logging')
-    version = settings.get('version')
+    version_info = settings.get('version')
+    version = version_info['tag']
 
     if 'format' not in log_options:
         log_options['format'] = '%(asctime)s '+version+' %(name)s/%(funcName)s %(levelname)s: %(message)s'
 
     if 'level' not in log_options:
-        log_options['level'] = 'INFO'
+        log_options['level'] = 'WARNING'
 
 
     # Install colored console handler
@@ -71,16 +74,13 @@ def setup_loggers(*args, **kwargs):
         fh = logging.FileHandler(log_options['path'])
         formatter = logging.Formatter(log_options['format'])
         fh.setFormatter(formatter)
-        logger.addHandler(fh)
-        logger.debug("Logging FileHandler registered succesfully.")
+        root_logger.addHandler(fh)
 
     # Install filter on root logger handlers
     class AlephLogsFilter(logging.Filter):
         def filter(self, record):
 
             return record.name.startswith('aleph')
-
-    root_logger = logging.getLogger()
 
     for handler in root_logger.handlers:
         handler.addFilter(AlephLogsFilter())
@@ -92,11 +92,21 @@ def setup_loggers(*args, **kwargs):
 def init_app(sender, instance, **kwargs):
     settings.set('worker_name', '{0}'.format(sender))
     with open('version.txt', 'r') as version:
-        settings.set('version', version.read().strip())
+        version_text = version.read().strip()
+        version_parts = version_text.split(' ')
+        version_info = {
+            'branch': version_parts[0],
+            'tag': version_parts[1],
+            'rev': version_parts[2],
+            'hash': version_parts[3]
+        }
+        settings.set('version', version_info)
 
 @celeryd_after_setup.connect
 def after_setup_cb(*args, **kwargs):
-    print(ASCII_ART_ALEPH_LOGO % settings.get('version'))
+    version = settings.get('version')
+    version_tag = f"{version['tag']}-r{version['rev']} ({version['hash']})"
+    print(ASCII_ART_ALEPH_LOGO % version_tag)
     logger.info("Aleph worker is initializing.")
 
 @worker_ready.connect

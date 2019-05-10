@@ -55,9 +55,9 @@ ASCII_ART_ALEPH_LOGO = r"""
 
           @@        
          @@@@           aleph | sample analysis pipeline
-        @@  @@          %s
+        @@  @@          https://aleph.re
        @@    @@      
-      @@      @@        by Aleph Labs <http://alephlabs.io>
+      @@      @@        Version: %s
      @@        @@       
     @@          @@
    @@            @@     Dissecting files for better threat intelligence since 2012

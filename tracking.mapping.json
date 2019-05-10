@@ -16,7 +16,7 @@
                     "type": "keyword"
                 }
             },
-                "type": "keyword"
+            "type": "keyword"
         },
         "analyzers_completed": {
             "fields": {
@@ -34,7 +34,7 @@
                     "type": "keyword"
                 }
             },
-                "type": "keyword"
+            "type": "keyword"
         },
         "known_filenames": {
             "fields": {

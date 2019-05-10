@@ -1,4 +1,5 @@
 from validators import domain, email, url, ipv4, ipv6, mac_address
+from netaddr import IPNetwork, IPAddress
 from ipaddress import ip_address, IPv4Address, IPv6Address
 from tld import get_tld
 from urllib.parse import urlparse
@@ -28,15 +29,19 @@ def validate_url(url_str):
 
     return False
 
-def validate_ip(ipaddr, ip_versions=[4, 6], ignore_addrs=['0.0.0.0']):
+def validate_ip(ipaddr, ip_versions=[4, 6], ignore_networks=['0.0.0.0/8']):
 
-    if ipaddr in ignore_addrs:
-        return False
+    if ignore_networks:
+        ipa = IPAddress(ipaddr)
+        for network in ignore_networks:
+            if ipa in IPNetwork(network):
+                return False
 
     try:
         ipa = ip_address(ipaddr)
 
         if isinstance(ipa, IPv4Address) and 4 in ip_versions:
+            
             return (ipv4(ipaddr))
 
         if isinstance(ipa, IPv6Address) and 6 in ip_versions:

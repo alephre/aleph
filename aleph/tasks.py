@@ -66,7 +66,8 @@ def process(self, sample_data, metadata, track_data={}):
             children = track_data.pop('children')
 
             for child in children:
-                call_task('aleph.datastores.tasks.track', args=[child, {'parents': [sample_id,]}])
+                if child != sample_id:
+                    call_task('aleph.datastores.tasks.track', args=[child, {'parents': [sample_id,]}])
 
         call_task('aleph.datastores.tasks.track', args=[sample_id, track_data])
 
