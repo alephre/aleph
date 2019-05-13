@@ -19,7 +19,15 @@ class Strings(Processor):
     name = 'strings'
     filetypes_exclude = FILETYPES_ARCHIVE + FILETYPES_META + ['text/url']
 
-    default_options = {'extract_meta_resources': True, 'extract_ipv6': False, 'extract_email': False}
+    default_options = {
+        'extract_meta_resources': True, 
+        'iocs_exclude': [
+            "ssdeeps",
+            "phone_numbers",
+            "email_addresses_complete",
+            "ipv6s",
+        ]
+    }
 
     classifiers = {}
 
@@ -49,6 +57,7 @@ class Strings(Processor):
     def process(self, sample):
 
         result = []
+        ioc_blacklist = self.options.get('iocs_exclude')
 
         try:
 
@@ -64,7 +73,7 @@ class Strings(Processor):
             # Parse strings for IOCs
             for s in unique_strings:
 
-                iocs = find_iocs(s)
+                iocs = find_iocs(s, ioc_blacklist)
 
                 for ioc_type, ioc_values in iocs.items():
                     if ioc_type is 'ipv6s' and not self.options.get('extract_ipv6'):
