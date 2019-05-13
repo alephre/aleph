@@ -75,7 +75,7 @@ class Archive(Processor):
         self.tag_archive()
 
         if len(extracted_files) == 0:
-            self.logger.error('Unable to uncompress sample %s [%s]: %s' % (
+            self.logger.warn('Unable to uncompress sample %s [%s]: %s' % (
                 sample['id'], 
                 sample['metadata']['filetype'],
                 last_exception
