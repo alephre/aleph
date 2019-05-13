@@ -30,6 +30,10 @@ class Host(Processor):
 
         }
 
+        # Add ourselves as an IOC
+        ioc_type = 'ipv4s' if metadata['ip_version'] is 4 else 'ipv6s'
+        self.add_ioc(ioc_type, [metadata['ip'],])
+
         if ip_info.is_global and metadata['ip_version'] is 4:
 
             geo = get_location_for_ip(ascii_data)

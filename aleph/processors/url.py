@@ -19,7 +19,7 @@ class URL(Processor):
         metadata = {
             'full_url': ascii_data,
             'scheme': url_object.scheme,
-            'netloc': url_object.netloc,
+            'domain': url_object.netloc,
             'path': url_object.path,
             'params': url_object.params,
             'fragment': url_object.fragment,
@@ -28,6 +28,10 @@ class URL(Processor):
             'port': url_object.port,
         }
 
-        self.extract_meta_sample('domain', url_object.netloc, sample['id'])
+        # Add IOCs
+        self.add_ioc('urls', [metadata['full_url'],])
+        self.add_ioc('domains', [metadata['domain'],])
+
+        self.extract_meta_sample('domain', metadata['domain'], sample['id'])
 
         return metadata

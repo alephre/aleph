@@ -2,6 +2,7 @@ from whois import whois
 from tld import get_tld
 from dns.resolver import Resolver, NoAnswer, NoNameservers, NXDOMAIN
 from dns.exception import Timeout
+from netaddr.core import AddrFormatError
 
 from aleph.models import Processor
 from aleph.exceptions import ProcessorRuntimeException
@@ -42,6 +43,10 @@ class Domain(Processor):
                 'txt': [],
             },
         }
+
+        # Add ourselves as an IOC
+        extracted_iocs['domains'].add(metadata['entry_data'])
+
         # Parse domain
         domain_info = get_tld(ascii_data, fix_protocol=True, fail_silently=True, as_object=True)
         if domain_info:
@@ -49,6 +54,10 @@ class Domain(Processor):
             metadata['tld'] = domain_info.tld
             metadata['fld'] = domain_info.fld
             metadata['subdomain'] = domain_info.subdomain
+
+            # If fld is different (we're a subdomain), add to IOCs as well
+            if metadata['fld'] is not metadata['entry_data']:
+                extracted_iocs['domains'].add(metadata['fld'])
         
         # Perform WHOIS lookup
         try:
@@ -108,7 +117,7 @@ class Domain(Processor):
                         elif validate_domain(_host):
                             extracted_iocs['domains'].add(_host.lower())
 
-            except (NoNameservers, NoAnswer, NXDOMAIN, Timeout) as e:
+            except (NoNameservers, NoAnswer, NXDOMAIN, Timeout, AddrFormatError) as e:
                 self.logger.warn('Error performing dns query: %s' % str(e))
             except Exception as e:
                 self.logger.error('Unexpected error running DNS query: %s' % str(e))
@@ -121,8 +130,8 @@ class Domain(Processor):
         for ip_addr in extracted_iocs['ipv4s']:
             self.extract_meta_sample('host', ip_addr, sample['id'])
 
-        # @FIXME not working, crazy recursion
-        #for domain in found_domains:
+        #@ FIXME needs exists() to be implemented, otherwise endless recursion
+        #for domain in extracted_iocs['domains']:
         #    if domain is not metadata['entry_data']:
         #        self.extract_meta_sample('domain', domain, sample['id'])
 
