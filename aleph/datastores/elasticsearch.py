@@ -44,10 +44,12 @@ class Elasticsearch(Datastore):
             self.logger.debug("Connected to elasticsearch")
 
             # Disable elasticsearch logging @FIXME maybe a mistake
-            es_logger = logging.getLogger('elasticsearch')
-            es_logger.propagate = False
-            es_trace_logger = logging.getLogger('elasticsearch')
-            es_trace_logger.propagate = False
+            disable_loggers = ['elasticsearch', 'elasticsearch.trace', 'urllib3']
+            for dl in disable_loggers:
+                dl_obj = logging.getLogger(dl)
+                dl_obj.propagate = False
+                dl_obj.setLevel(logging.CRITICAL)
+
         except Exception as e:
             self.logger.error('Error setting up Elasticsearch datastore: %s' % str(e))
 
