@@ -9,6 +9,7 @@ geocoder
 geoip2
 ioc-finder
 iocextract
+lief
 netaddr
 pdfminer.six
 pefile
@@ -16,8 +17,10 @@ piexif
 pip-chill
 python-magic
 python-slugify
+python-whois
 pyyaml
 rarfile
+scapy
 ssdeep
 tld
 validators

@@ -27,7 +27,7 @@ default_values = {
     "monero_addresses": [],
     "neo_addresses": [],
     "ripple_addresses": [],
-    "onion_addresses": []
+    "onion_addresses": [],
     "cves": [],
     "domains": [],
     "email_addresses": [],
