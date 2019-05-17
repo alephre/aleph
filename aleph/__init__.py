@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import coloredlogs
+import random
 import logging
 import sys
 
@@ -8,7 +9,8 @@ from celery import Celery
 from celery.signals import setup_logging, celeryd_init, worker_ready, celeryd_after_setup #, after_setup_logger
 
 from aleph.config import ConfigManager, routes, settings
-from aleph.config.constants import CELERY_AUTODISCOVER_TASKS, ASCII_ART_ALEPH_LOGO
+from aleph.config.constants import CELERY_AUTODISCOVER_TASKS
+from aleph.config.constants import ASCII_ART_ALEPH_LOGOS
 from aleph.models import AlephTask
 
 logger = logging.getLogger(__name__)
@@ -106,7 +108,7 @@ def init_app(sender, instance, **kwargs):
 def after_setup_cb(*args, **kwargs):
     version = settings.get('version')
     version_tag = f"{version['tag']}-r{version['rev']} ({version['hash']})"
-    print(ASCII_ART_ALEPH_LOGO % version_tag)
+    print(random.choice(ASCII_ART_ALEPH_LOGOS % version_tag)
     logger.info("Aleph worker is initializing.")
 
 @worker_ready.connect
