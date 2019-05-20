@@ -51,46 +51,17 @@ FIELD_TRACK_PLUGIN_COMPLETED = '%ss_completed'
 
 CACHE_LRU_SIZE = 32
 
-ASCII_ART_ALEPH_LOGOS = ["""
+ASCII_ART_ALEPH_LOGO = r"""
 
-          @@
+          @@        
          @@@@           aleph | sample analysis pipeline
         @@  @@          https://aleph.re
-       @@    @@
+       @@    @@      
       @@      @@        Version: %s
-     @@        @@
+     @@        @@       
     @@          @@
    @@            @@     Dissecting files for better threat intelligence since 2012
-  @@              @@
- @@  @@@@@@@@@@@@@@@@
+  @@              @@  
+ @@  @@@@@@@@@@@@@@@@ 
 
-""",
 """
-      _       __                 __
-     / \     [  |               [  |
-    / _ \     | | .---.  _ .--.  | |--.
-   / ___ \    | |/ /__\\[ '/'`\ \| .-. |
- _/ /   \ \_  | || \__., | \__/ || | | |
-|____| |____|[___]'.__.' | ;.__/[___]|__]
-                        [__|
-
-  aleph | sample analysis pipeline
-  version: %s
-
-""",
-"""
-
-        https://aleph.re
-         version: %s
-
- █████╗ ██╗     ███████╗██████╗ ██╗  ██╗
-██╔══██╗██║     ██╔════╝██╔══██╗██║  ██║
-███████║██║     █████╗  ██████╔╝███████║
-██╔══██║██║     ██╔══╝  ██╔═══╝ ██╔══██║
-██║  ██║███████╗███████╗██║     ██║  ██║
-╚═╝  ╚═╝╚══════╝╚══════╝╚═╝     ╚═╝  ╚═╝
-  aleph | sample analysis pipeline
-"""
-]
-
-
