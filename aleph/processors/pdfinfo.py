@@ -92,7 +92,18 @@ class PDFInfo(Processor):
         if not re.match('%PDF-1\.\d', jdata['version']):
             results['Header'] = 'Invalid PDF version: {0}'.format(jdata['Header'])
 
-        # pdfid json nests keywords in a list within a dict of a dict.. it's dumb.
+        if 'totalEntropy' in jdata.keys():
+            results['total_entropy'] = jdata['TotalEntropy']
+
+        if 'streamEntropy' in jdata.keys():
+            results['stream_entropy'] = jdata['streamEntropy']
+
+        if 'nonStreamEntropy' in jdata.keys():
+            results['nonstream_entropy'] = jdata['nonStreamEntropy']
+
+        if extra_data:
+            self.get_pdf_entropy(results['total_entropy'], results['stream_entropy'], results['nonstream_entropy'])
+
         for keyword in jdata['keywords']['keyword']:
             # get page count and add tags if document contains small
             # number of pages. single page PDF are often malicious,
@@ -108,49 +119,38 @@ class PDFInfo(Processor):
                 self.add_tag('pdf-single-page')
                 self.add_tag('pdf-suspicious')
 
-            if keyword['name'] == '/JS' and keyword['count'] > 1:
-                results['javascript'] = 'Contains {0} /JS tag'.format(keyword['count'])
-                self.add_tag('pdf-contains-javascript')
+            if keyword['count']:
+                if keyword['name'] == '/JS':
+                    results['javascript'] = 'Contains {0} /JS tag'.format(keyword['count'])
+                    self.add_tag('pdf-contains-javascript')
 
-            if keyword['name'] == '/AcroForm' and keyword['count'] > 1:
-                results['javascript'] = 'Contains {0} /JS tag'.format(keyword['count'])
-                self.add_tag('pdf-contains-javascript')
+                if keyword['name'] == '/AcroForm':
+                    results['javascript'] = 'Contains {0} /JS tag'.format(keyword['count'])
+                    self.add_tag('pdf-contains-javascript')
 
-            if keyword['name'] == '/AA' and keyword['count'] > 1:
-                results['additional_action'] = 'Contains {0} /AA tag'.format(keyword['count'])
-                self.add_tag('pdf-contains-aa')
+                if keyword['name'] == '/AA':
+                    results['additional_action'] = 'Contains {0} /AA tag'.format(keyword['count'])
+                    self.add_tag('pdf-contains-aa')
 
-            if keyword['name'] == '/AutoAction' and keyword['count'] > 1:
-                results['auto_action'] = 'Contains {0} /AutoAction tags'.format(keyword['count'])
-                self.add_tag('pdf-contains-autoaction')
+                if keyword['name'] == '/AutoAction':
+                    results['auto_action'] = 'Contains {0} /AutoAction tags'.format(keyword['count'])
+                    self.add_tag('pdf-contains-autoaction')
 
-            if keyword['name'] == '/OpenAction' and keyword['count'] > 1:
-                results['open_action'] = 'Contains {0} /OpenAction tags'.format(keyword['count'])
-                self.add_tag('pdf-contains-openaction')
+                if keyword['name'] == '/OpenAction':
+                    results['open_action'] = 'Contains {0} /OpenAction tags'.format(keyword['count'])
+                    self.add_tag('pdf-contains-openaction')
 
-            if keyword['name'] == '/LaunchAction' and keyword['count'] > 1:
-                results['launch_ction'] = 'Contains {0} /Launch actions'.format(keyword['count'])
-                self.add_tag('pdf-contains-launchaction')
+                if keyword['name'] == '/LaunchAction':
+                    results['launch_ction'] = 'Contains {0} /Launch actions'.format(keyword['count'])
+                    self.add_tag('pdf-contains-launchaction')
 
-            if keyword['name'] == '/EmbeddedFiles' and keyword['count'] > 1:
-                results['Embedded Files'] = 'Contains {0} /EmbeddedFiles tags'.format(keyword['count'])
-                self.add_tag('pdf-contains-embeddedfiles')
+                if keyword['name'] == '/EmbeddedFiles':
+                    results['Embedded Files'] = 'Contains {0} /EmbeddedFiles tags'.format(keyword['count'])
+                    self.add_tag('pdf-contains-embeddedfiles')
 
-            if keyword['uri'] == '/URI' and keyword['count'] != 0:
-                results['Additional Action'] = 'Contains {0} URI tags'.format(keyword['count'])
-                self.add_tag('pdf-contains-embeddedfiles')
-
-            if 'totalEntropy' in jdata.keys():
-                results['total_entropy'] = jdata['TotalEntropy']
-
-            if 'streamEntropy' in jdata.keys():
-                results['stream_entropy'] = jdata['streamEntropy']
-
-            if 'nonStreamEntropy' in jdata.keys():
-                results['nonstream_entropy'] = jdata['nonStreamEntropy']
-
-        if extra_data:
-            self.get_pdf_entropy(results['total_entropy'], results['stream_entropy'], results['nonstream_entropy'])
+                if keyword['uri'] == '/URI':
+                    results['Additional Action'] = 'Contains {0} URI tags'.format(keyword['count'])
+                    self.add_tag('pdf-contains-uri')
 
         return results
 
