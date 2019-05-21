@@ -51,7 +51,7 @@ FIELD_TRACK_PLUGIN_COMPLETED = '%ss_completed'
 
 CACHE_LRU_SIZE = 32
 
-ASCII_ART_ALEPH_LOGOS = ["""
+ASCII_ART_ALEPH_LOGOS = """
 
           @@
          @@@@           aleph | sample analysis pipeline
@@ -64,33 +64,4 @@ ASCII_ART_ALEPH_LOGOS = ["""
   @@              @@
  @@  @@@@@@@@@@@@@@@@
 
-""",
 """
-      _       __                 __
-     / \     [  |               [  |
-    / _ \     | | .---.  _ .--.  | |--.
-   / ___ \    | |/ /__\\[ '/'`\ \| .-. |
- _/ /   \ \_  | || \__., | \__/ || | | |
-|____| |____|[___]'.__.' | ;.__/[___]|__]
-                        [__|
-
-  aleph | sample analysis pipeline
-  version: %s
-
-""",
-"""
-
-        https://aleph.re
-         version: %s
-
- █████╗ ██╗     ███████╗██████╗ ██╗  ██╗
-██╔══██╗██║     ██╔════╝██╔══██╗██║  ██║
-███████║██║     █████╗  ██████╔╝███████║
-██╔══██║██║     ██╔══╝  ██╔═══╝ ██╔══██║
-██║  ██║███████╗███████╗██║     ██║  ██║
-╚═╝  ╚═╝╚══════╝╚══════╝╚═╝     ╚═╝  ╚═╝
-  aleph | sample analysis pipeline
-"""
-]
-
-
