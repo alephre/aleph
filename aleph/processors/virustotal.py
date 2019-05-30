@@ -1,7 +1,9 @@
 from time import sleep
 from operator import itemgetter
 
-from virus_total_apis import PublicApi as VirusTotal
+from virus_total_apis import PublicApi
+from virus_total_apis import PrivateApi
+
 
 from aleph.models import Processor
 from aleph.helpers.datautils import hash_data
@@ -10,6 +12,7 @@ from aleph.config.constants import FILETYPES_ARCHIVE
 
 VT_RESPONSE_OK = 200
 VT_SCAN_OK = 1
+
 
 class VirusTotal(Processor):
 
@@ -23,7 +26,17 @@ class VirusTotal(Processor):
 
     def setup(self):
 
-        self.vt = VirusTotal(self.options.get('api_key'))
+        self.vt_key = self.options.get('api_key')
+        self.vt_type = self.options.get('key_type', '')
+
+        if self.vt_type == 'public':
+            self.vt = PublicApi(key=self.vt_key)
+
+        elif self.vt_type == '':
+            self.vt = PublicApi(key=self.vt_key)
+
+        elif self.vt_type == 'private':
+            self.vt = PrivateApi(key=self.vt_key)
 
     def get(self, file_hash):
 
@@ -76,7 +89,7 @@ class VirusTotal(Processor):
 
         for av, res in report['scans'].items():
             if res['detected']:
-                self.parse_tags(res['result'])
+                self.parse_av_tags(res['result'])
                 detections.append({
                     'av': av,
                     'version': res['version'],
@@ -86,6 +99,15 @@ class VirusTotal(Processor):
         if report['positives'] > 0:
             self.add_tag('malware')
 
+        if self.key_type == 'private':
+            if len(report['tags']) > 1:
+                self.parse_tags(report['tags'])
+
+            if len(report['ITW_urls']):
+                # add ITW urls as URL indicator
+                for url in report['ITW_urls']:
+                    self.add_ioc('urls', url)
+
         return {
             'scan_id': report['scan_id'],
             'positives': report['positives'],
@@ -93,7 +115,7 @@ class VirusTotal(Processor):
             'detections': sorted(detections, key=itemgetter('av')),
         }
 
-    def parse_tags(self, malware_name):
+    def parse_av_tags(self, malware_name):
         if in_string(['banker', 'banload'], malware_name):
             self.add_tag('malware-banker')
 
@@ -105,3 +127,71 @@ class VirusTotal(Processor):
 
         if in_string(['rat'], malware_name):
             self.add_tag('malware-rat')
+
+    def parse_tags(self, sample_tags):
+
+        for tag in sample_tags:
+            # malware packer specific
+            if tag in ['upx', 'asprox', 'themida']:
+                self.add_tag('malware-packed')
+
+            # osx specific
+            if tag == 'dropper':
+                self.add_tag('malware-dropper')
+
+            # bundle specific
+            if tag == 'encrypted':
+                self.add_tag('encrypted')
+
+            # exploit specific tags
+            if tag == 'exploit':
+                self.add_tag('exploit')
+
+            if 'cve' in tag:
+                self.add_tag(tag.lower())
+
+            # document specific tags
+            if tag == 'macros':
+                self.add_tag('document-contains-macros')
+
+            if tag.startswith('auto-'):
+                self.add_tag('document-contains-{0}'.format(tag))
+
+            if tag.endswith('-file'):
+                self.add_tag('document-contains-{0}'.format(tag))
+
+            if tag == 'powershell':
+                self.add_tag('document-contains-powershell')
+
+            # pdf specific tags
+            if tag == 'js-embedded':
+                self.add_tag('pdf-contains-javascript')
+
+            if tag == 'flash-embedded':
+                self.add_tag('pdf-contains-flash')
+
+            if tag == 'autoaction':
+                self.add_tag('pdf-contains-autoaction')
+
+            if tag == 'acroform':
+                self.add_tag('pdf-contains-acroform')
+
+            if tag == 'launch-action':
+                self.add_tag('pdf-contains-launchaction')
+
+            if tag == 'file-embedded':
+                self.add_tag('pdf-contains-embeddedfiles')
+
+            # flash specific tags
+            if tag == 'obfuscated':
+                self.add_tag('flash-obfuscated')
+
+            if tag == 'javascript':
+                self.add_tag('flash-contains-javascript')
+
+            ignore_tags = ['flash-embedded', 'js-embedded', 'file-embedded']
+            # -exe-embedded, -rar-embedded, -zip-embedded
+            if tag.endswith('-embedded') and tag not in ignore_tags:
+                # swap $type-embedded. i.e., converts to 'flash-contains-embedded-exe', etc.
+                tag = tag.split('-')
+                self.add_tag('flash-contains-{0}-'.format(tag[1], tag[0]))
