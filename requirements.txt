@@ -15,10 +15,10 @@ pdfminer.six
 pefile
 piexif
 pip-chill
+pre-commit
 python-magic
 python-slugify
 python-whois
-pyyaml
 rarfile
 scapy
 ssdeep
