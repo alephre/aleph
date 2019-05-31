@@ -1,17 +1,22 @@
 import yaml
 
-# Config Manager
+
 class ConfigManager(object):
 
     config = {}
     section_name = None
 
-    def __init__(self, config = {}, section_name = None):
+    def __init__(self, config={}, section_name=None):
+        """Set config default value and section name."""
         self.config = config
         self.section_name = section_name
 
     def base(self):
-        return self.config[self.section_name] if self.section_name and self.section_name in self.config.keys() else self.config
+        return (
+            self.config[self.section_name]
+            if self.section_name and self.section_name in self.config.keys()
+            else self.config
+        )
 
     def load(self, path):
         with open(path) as f:
@@ -29,9 +34,9 @@ class ConfigManager(object):
         self.base()[option] = value
 
     def has_option(self, option):
-        return (option in self.base())
+        return option in self.base()
 
 
 # Setup Aleph Settings
 settings = ConfigManager()
-settings.load('config.yaml')
+settings.load("config.yaml")

@@ -4,6 +4,7 @@ from ipaddress import ip_address, IPv4Address, IPv6Address
 from tld import get_tld
 from urllib.parse import urlparse
 
+
 def validate_domain(domain_str, domain_min_length=2):
 
     res = get_tld(domain_str, as_object=True, fix_protocol=True, fail_silently=True)
@@ -14,7 +15,8 @@ def validate_domain(domain_str, domain_min_length=2):
     if len(res.domain) < domain_min_length:
         return False
 
-    return (domain(res.fld))
+    return domain(res.fld)
+
 
 def validate_url(url_str):
 
@@ -29,7 +31,8 @@ def validate_url(url_str):
 
     return False
 
-def validate_ip(ipaddr, ip_versions=[4, 6], ignore_networks=['0.0.0.0/8']):
+
+def validate_ip(ipaddr, ip_versions=[4, 6], ignore_networks=["0.0.0.0/8"]):
 
     if ignore_networks:
         ipa = IPAddress(ipaddr)
@@ -41,20 +44,22 @@ def validate_ip(ipaddr, ip_versions=[4, 6], ignore_networks=['0.0.0.0/8']):
         ipa = ip_address(ipaddr)
 
         if isinstance(ipa, IPv4Address) and 4 in ip_versions:
-            
-            return (ipv4(ipaddr))
+
+            return ipv4(ipaddr)
 
         if isinstance(ipa, IPv6Address) and 6 in ip_versions:
-            return (ipv6(ipaddr))
+            return ipv6(ipaddr)
 
         return False
     except ValueError:
         return False
 
+
 def validate_mac_address(mac_addr):
 
-    return (mac_address(mac_addr))
+    return mac_address(mac_addr)
+
 
 def validate_email(email_addr):
 
-    return (email(email_addr))
+    return email(email_addr)

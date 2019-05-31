@@ -16,6 +16,7 @@ pefile
 piexif
 pip-chill
 pre-commit
+pytest
 python-magic
 python-slugify
 python-whois
@@ -23,6 +24,7 @@ rarfile
 scapy
 ssdeep
 tld
+tox
 validators
 virustotal-api
 yara-python

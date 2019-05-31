@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Models for aleph.
+"""
+Models for aleph.
 
 This module contains all the models used by the application.
 The inheritance system works as the following:
@@ -11,12 +12,9 @@ The inheritance system works as the following:
             - Classifier
 """
 
-import os
-import json
 import logging
 
 from datetime import datetime
-from copy import copy
 from slugify import slugify
 
 from celery import Task
@@ -27,13 +25,13 @@ from abc import ABC
 from aleph.config import ConfigManager, settings
 from aleph.helpers.tasks import call_task
 from aleph.helpers.dates import to_es_date
-from aleph.helpers.datautils import encode_data, decode_data
+from aleph.helpers.datautils import encode_data
 from aleph.helpers.iocs import default_values as ioc_default_values
 from aleph.exceptions import PluginException, ProcessorRuntimeException
 
 
 class AlephTask(Task):
-    """Aleph's specialization of Celery Task"""
+    """Aleph's specialization of Celery Task."""
 
     def __call__(self, *args, **kwargs):
         self.logger = get_task_logger(__name__)
@@ -59,7 +57,7 @@ class Component(ABC):
     component_type = None
 
     def __init__(self, options=None, logger=None, dry=False):
-
+        """Initialize and configure the component."""
         super(Component, self).__init__()
 
         if not self.component_type:

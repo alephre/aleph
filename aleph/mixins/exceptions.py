@@ -6,27 +6,28 @@ from collections import namedtuple
 
 # Mixins from https://github.com/mahmoud/boltons/blob/master/boltons/excutils.py
 
+
 class ExceptionCauseMixin(Exception):
     """
+    Exception mixin that extracts cause and traceback.
+
     A mixin class for wrapping an exception in another exception, or
     otherwise indicating an exception was caused by another exception.
     This is most useful in concurrent or failure-intolerant scenarios,
     where just because one operation failed, doesn't mean the remainder
     should be aborted, or that it's the appropriate time to raise
     exceptions.
+
     This is still a work in progress, but an example use case at the
     bottom of this module.
+
     NOTE: when inheriting, you will probably want to put the
     ExceptionCauseMixin first. Builtin exceptions are not good about
     calling super()
     """
 
     cause = None
-    original_exc_info = {
-        'type': None,
-        'value': None,
-        'tb': None
-    }
+    original_exc_info = {"type": None, "value": None, "tb": None}
 
     def __new__(cls, *args, **kw):
         cause = None
@@ -36,13 +37,13 @@ class ExceptionCauseMixin(Exception):
         ret.cause = cause
         if cause is None:
             return ret
-        root_cause = getattr(cause, 'root_cause', None)
+        root_cause = getattr(cause, "root_cause", None)
         if root_cause is None:
             ret.root_cause = cause
         else:
             ret.root_cause = root_cause
 
-        full_trace = getattr(cause, 'full_trace', None)
+        full_trace = getattr(cause, "full_trace", None)
         if full_trace is not None:
             ret.full_trace = list(full_trace)
             ret._tb = list(cause._tb)
@@ -51,9 +52,9 @@ class ExceptionCauseMixin(Exception):
 
         try:
             exc_type, exc_value, exc_tb = sys.exc_info()
-            ret.original_exc_info['type'] = exc_type
-            ret.original_exc_info['value'] = exc_value
-            ret.original_exc_info['tb'] = exc_tb
+            ret.original_exc_info["type"] = exc_type
+            ret.original_exc_info["value"] = exc_value
+            ret.original_exc_info["tb"] = exc_tb
             if exc_type is None and exc_value is None:
                 return ret
             if cause is exc_value or root_cause is exc_value:
@@ -69,54 +70,58 @@ class ExceptionCauseMixin(Exception):
 
     def get_exception_text(self):
 
-        if not self.original_exc_info['value']:
+        if not self.original_exc_info["value"]:
             return self._get_message()
 
-        fname = os.path.split(self.original_exc_info['tb'].tb_frame.f_code.co_filename)[1]
+        fname = os.path.split(self.original_exc_info["tb"].tb_frame.f_code.co_filename)[
+            1
+        ]
         return f"{self.original_exc_info['type'].__name__}: {self.original_exc_info['value']} [{fname}:{self.original_exc_info['tb'].tb_lineno}]"
 
     def get_str(self):
         """
-        Get formatted the formatted traceback and exception
-        message. This function exists separately from __str__()
+        Get formatted traceback and exception message.
+
+        This function exists separately from __str__()
         because __str__() is somewhat specialized for the built-in
         traceback module's particular usage.
         """
         ret = []
         trace_str = self._get_trace_str()
         if trace_str:
-            ret.extend(['Traceback (most recent call last):\n', trace_str])
+            ret.extend(["Traceback (most recent call last):\n", trace_str])
         ret.append(self._get_exc_str())
-        return ''.join(ret)
+        return "".join(ret)
 
     def _get_message(self):
-        args = getattr(self, 'args', [])
+        args = getattr(self, "args", [])
         if self.cause:
             args = args[1:]
         if args and args[0]:
             return args[0]
-        return ''
+        return ""
 
     def _get_trace_str(self):
         if not self.cause:
             return super(ExceptionCauseMixin, self).__repr__()
         if self.full_trace:
-            return ''.join(traceback.format_list(self.full_trace))
-        return ''
+            return "".join(traceback.format_list(self.full_trace))
+        return ""
 
     def _get_exc_str(self, incl_name=True):
         cause_str = _format_exc(self.root_cause)
         message = self._get_message()
         ret = []
         if incl_name:
-            ret = [self.__class__.__name__, ': ']
+            ret = [self.__class__.__name__, ": "]
         if message:
-            ret.extend([message, ' (caused by ', cause_str, ')'])
+            ret.extend([message, " (caused by ", cause_str, ")"])
         else:
-            ret.extend([' caused by ', cause_str])
-        return ''.join(ret)
+            ret.extend([" caused by ", cause_str])
+        return "".join(ret)
 
     def __str__(self):
+        """Format traceback for visual representation."""
         if not self.cause:
             return super(ExceptionCauseMixin, self).__str__()
         trace_str = self._get_trace_str()
@@ -124,11 +129,15 @@ class ExceptionCauseMixin(Exception):
         if trace_str:
             message = self._get_message()
             if message:
-                ret.extend([message, ' --- '])
-            ret.extend(['Wrapped traceback (most recent call last):\n',
-                        trace_str,
-                        self._get_exc_str(incl_name=True)])
-            return ''.join(ret)
+                ret.extend([message, " --- "])
+            ret.extend(
+                [
+                    "Wrapped traceback (most recent call last):\n",
+                    trace_str,
+                    self._get_exc_str(incl_name=True),
+                ]
+            )
+            return "".join(ret)
         else:
             return self._get_exc_str(incl_name=False)
 
@@ -140,13 +149,13 @@ def _format_exc(exc, message=None):
     return exc_str.rstrip()
 
 
-_BaseTBItem = namedtuple('_BaseTBItem', 'filename, lineno, name, line')
+_BaseTBItem = namedtuple("_BaseTBItem", "filename, lineno, name, line")
 
 
 class _TBItem(_BaseTBItem):
     def __repr__(self):
         ret = super(_TBItem, self).__repr__()
-        ret += ' <%r>' % self.frame_id
+        ret += " <%r>" % self.frame_id
         return ret
 
 
@@ -155,8 +164,13 @@ class _DeferredLine(object):
         self.filename = filename
         self.lineno = lineno
         module_globals = module_globals or {}
-        self.module_globals = dict([(k, v) for k, v in module_globals.items()
-                                    if k in ('__name__', '__loader__')])
+        self.module_globals = dict(
+            [
+                (k, v)
+                for k, v in module_globals.items()
+                if k in ("__name__", "__loader__")
+            ]
+        )
 
     def __eq__(self, other):
         return (self.lineno, self.filename) == (other.lineno, other.filename)
@@ -165,12 +179,10 @@ class _DeferredLine(object):
         return (self.lineno, self.filename) != (other.lineno, other.filename)
 
     def __str__(self):
-        if hasattr(self, '_line'):
+        if hasattr(self, "_line"):
             return self._line
         linecache.checkcache(self.filename)
-        line = linecache.getline(self.filename,
-                                 self.lineno,
-                                 self.module_globals)
+        line = linecache.getline(self.filename, self.lineno, self.module_globals)
         if line:
             line = line.strip()
         else:
@@ -193,7 +205,7 @@ def _extract_from_frame(f=None, limit=None):
     if f is None:
         f = sys._getframe(1)  # cross-impl yadayada
     if limit is None:
-        limit = getattr(sys, 'tracebacklimit', 1000)
+        limit = getattr(sys, "tracebacklimit", 1000)
     n = 0
     while f is not None and n < limit:
         filename = f.f_code.co_filename
@@ -212,7 +224,7 @@ def _extract_from_frame(f=None, limit=None):
 def _extract_from_tb(tb, limit=None):
     ret = []
     if limit is None:
-        limit = getattr(sys, 'tracebacklimit', 1000)
+        limit = getattr(sys, "tracebacklimit", 1000)
     n = 0
     while tb is not None and n < limit:
         filename = tb.tb_frame.f_code.co_filename

@@ -1,8 +1,10 @@
+.coverage*
+.tox
+.python-version
 aleph.log
 config.yaml
-celerybeat-schedule.db
+celerybeat-schedule.*
 celerybeat.pid
-.venv
 *.swo
 *.swn
 *.swp

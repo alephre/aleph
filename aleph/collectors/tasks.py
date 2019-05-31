@@ -2,7 +2,15 @@ from aleph import app
 from aleph.config import settings
 from aleph.helpers.loaders import load_collector
 
-COLLECTORS = [(name, load_collector(name)(options)) for name, options in settings.get('collector').items()] if settings.has_option('collector') else []
+COLLECTORS = (
+    [
+        (name, load_collector(name)(options))
+        for name, options in settings.get("collector").items()
+    ]
+    if settings.has_option("collector")
+    else []
+)
+
 
 @app.task(bind=True)
 def collect(self):
@@ -12,7 +20,7 @@ def collect(self):
         try:
             collector.collect()
         except Exception as e:
-            self.logger.error('Error on %s collector: %s' % (name, str(e)))
+            self.logger.error("Error on %s collector: %s" % (name, str(e)))
             continue
         self.logger.debug("Collector %s completed" % name)
 

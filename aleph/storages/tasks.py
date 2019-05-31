@@ -1,11 +1,13 @@
-import os
-
 from aleph import app
 from aleph.config import settings
 from aleph.helpers.loaders import load_storage
 from aleph.helpers.datautils import encode_data, decode_data
 
-STORAGES = [(name, load_storage(name)(options)) for name, options in settings.get('storage').items()]
+STORAGES = [
+    (name, load_storage(name)(options))
+    for name, options in settings.get("storage").items()
+]
+
 
 @app.task(bind=True)
 def store(self, sample_id, sample_data, enqueue=True):
@@ -16,7 +18,7 @@ def store(self, sample_id, sample_data, enqueue=True):
             storage.store(sample_id, decode_data(sample_data))
             self.logger.debug("Sample %s stored to %s storage" % (sample_id, name))
         except Exception as e:
-            self.logger.error('Error on %s storage: %s' % (name, str(e)))
+            self.logger.error("Error on %s storage: %s" % (name, str(e)))
             continue
 
 
@@ -31,7 +33,7 @@ def retrieve(self, sample_id):
                 break
             self.logger.debug("Sample %s retrieved from %s storage" % (sample_id, name))
         except Exception as e:
-            self.logger.error('Error on %s storage: %s' % (name, str(e)))
+            self.logger.error("Error on %s storage: %s" % (name, str(e)))
             continue
 
     return encode_data(sample)
