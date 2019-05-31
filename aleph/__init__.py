@@ -6,8 +6,8 @@ Celery signals are trapped for logging setup and indicate that the
 worker is up and ready to go.
 """
 
-import coloredlogs
 import logging
+import coloredlogs
 
 from celery import Celery
 from celery.signals import (
@@ -21,7 +21,7 @@ from aleph.config import routes, settings
 from aleph.models import AlephTask
 from aleph.config.constants import CELERY_AUTODISCOVER_TASKS, ASCII_ART_ALEPH_LOGO
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 # Celery app creation
 app = Celery("aleph")
@@ -109,13 +109,12 @@ def setup_loggers(*args, **kwargs):
     # Install filter on root logger handlers
     class AlephLogsFilter(logging.Filter):
         def filter(self, record):
-
             return record.name.startswith("aleph")
 
     for handler in root_logger.handlers:
         handler.addFilter(AlephLogsFilter())
 
-    logger.debug("Logging setup successful.")
+    LOGGER.debug("Logging setup successful.")
 
 
 @celeryd_init.connect
@@ -149,10 +148,10 @@ def after_setup(*args, **kwargs):
     version = settings.get("version")
     version_tag = f"{version['tag']}-r{version['rev']} ({version['hash']})"
     print(ASCII_ART_ALEPH_LOGO % version_tag)
-    logger.info("Aleph worker is starting.")
+    LOGGER.info("Aleph worker is starting.")
 
 
 @worker_ready.connect
 def worker_ready(*args, **kwargs):
     """Execute routines after the worker is running and ready to accept jobs."""
-    logger.info("Aleph worker is online.")
+    LOGGER.info("Aleph worker is online.")

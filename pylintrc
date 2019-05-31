@@ -1,0 +1,26 @@
+[MASTER]
+persistent=yes
+jobs=5
+unsafe-load-any-extension=no
+extension-pkg-whitelist=
+
+[MESSAGES CONTROL]
+enable=use-symbolic-message-instead,useless-supression,fixme
+disable=
+    missing-docstring,
+    too-few-public-methods,
+    # handled by black
+    format
+
+[MISCELLANEOUS]
+notes=FIXME,IMPLEMENTME,TODO
+
+[SIMILARITIES]
+# Minimum lines number of a similarity.
+min-similarity-lines=4
+# Ignore comments when computing similarities.
+ignore-comments=yes
+# Ignore docstrings when computing similarities.
+ignore-docstrings=yes
+# Ignore imports when computing similarities.
+ignore-imports=no
