@@ -156,6 +156,13 @@ class PDF(Processor):
 
         results["pages"] = tags["pages"] if tags["pages"] else tags["page"]
 
+        # Remove page(s) tags
+        tags.pop("pages")
+        tags.pop("page")
+
+        # Add all tag counts
+        results["tags"] = tags
+
         # @FIXME use add_flag directly
         if results["pages"] == 2:
             self.add_tag("pdf-suspicious")
