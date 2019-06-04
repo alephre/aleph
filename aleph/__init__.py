@@ -23,56 +23,61 @@ from aleph.config.constants import CELERY_AUTODISCOVER_TASKS, ASCII_ART_ALEPH_LO
 
 LOGGER = logging.getLogger(__name__)
 
-# Celery app creation
-app = Celery("aleph")
-app.Task = AlephTask
 
-# Load Routes
-app.config_from_object(routes)
+def create_app():
 
-# Celery Options
-RESULT_BACKEND = (
-    "rpc://"
-    if not settings.has_option("result_backend")
-    else settings.get("result_backend")
-)
+    # Celery app creation
+    celery = Celery("aleph")
+    celery.Task = AlephTask
 
-DEFAULT_RETRY_DELAY = (
-    10
-    if not settings.has_option("default_retry_delay")
-    else settings.get("default_retry_delay")
-)
+    # Load Routes
+    celery.config_from_object(routes)
 
-MAX_RETRIES = (
-    None if not settings.has_option("max_retries") else settings.get("max_retries")
-)
+    # Celery Options
+    result_backend = (
+        "rpc://"
+        if not settings.has_option("result_backend")
+        else settings.get("result_backend")
+    )
 
-app.conf.update(
-    {
-        "broker_url": settings.get("transport"),
-        "result_backend": RESULT_BACKEND,
-        "broker_transport_options": {"confirm_publish": True},
-        "worker_hijack_root_logger": False,
-        "event_timezone": "UTC",
-        "task_acks_late": True,
-        "task_acks_on_failure_or_timeout": False,
-        "task_reject_on_worker_lost": True,
-        "task_annotations": {
-            "*": {
-                "max_retries": MAX_RETRIES,
-                "retry_backoff": True,
-                "default_retry_delay": DEFAULT_RETRY_DELAY,
-            }
-        },
-    }
-)
+    default_retry_delay = (
+        10
+        if not settings.has_option("default_retry_delay")
+        else settings.get("default_retry_delay")
+    )
 
-# Autodiscover tasks
-app.autodiscover_tasks(CELERY_AUTODISCOVER_TASKS, force=True)
+    max_retries = (
+        None if not settings.has_option("max_retries") else settings.get("max_retries")
+    )
+
+    celery.conf.update(
+        {
+            "broker_url": settings.get("transport"),
+            "result_backend": result_backend,
+            "broker_transport_options": {"confirm_publish": True},
+            "worker_hijack_root_logger": False,
+            "event_timezone": "UTC",
+            "task_acks_late": True,
+            "task_acks_on_failure_or_timeout": False,
+            "task_reject_on_worker_lost": True,
+            "task_annotations": {
+                "*": {
+                    "max_retries": max_retries,
+                    "retry_backoff": True,
+                    "default_retry_delay": default_retry_delay,
+                }
+            },
+        }
+    )
+
+    # Autodiscover tasks
+    celery.autodiscover_tasks(CELERY_AUTODISCOVER_TASKS, force=True)
+
+    return celery
 
 
 @setup_logging.connect
-def setup_loggers(*args, **kwargs):
+def setup_loggers():
     """
     Initialize aleph custom logging.
 
@@ -101,10 +106,10 @@ def setup_loggers(*args, **kwargs):
     # Add file handler if configured
     if "path" in log_options:
         # FileHandler
-        fh = logging.FileHandler(log_options["path"])
+        file_handler = logging.FileHandler(log_options["path"])
         formatter = logging.Formatter(log_options["format"])
-        fh.setFormatter(formatter)
-        root_logger.addHandler(fh)
+        file_handler.setFormatter(formatter)
+        root_logger.addHandler(file_handler)
 
     # Install filter on root logger handlers
     class AlephLogsFilter(logging.Filter):
@@ -118,7 +123,7 @@ def setup_loggers(*args, **kwargs):
 
 
 @celeryd_init.connect
-def init_app(sender, instance, **kwargs):
+def init_app(sender):
     """
     Initialize application.
 
@@ -139,7 +144,7 @@ def init_app(sender, instance, **kwargs):
 
 
 @celeryd_after_setup.connect
-def after_setup(*args, **kwargs):
+def after_setup():
     """
     Execute post-setup routines.
 
@@ -152,6 +157,9 @@ def after_setup(*args, **kwargs):
 
 
 @worker_ready.connect
-def worker_ready(*args, **kwargs):
+def worker_ready():
     """Execute routines after the worker is running and ready to accept jobs."""
     LOGGER.info("Aleph worker is online.")
+
+
+app = create_app()  # pylint: disable=invalid-name
