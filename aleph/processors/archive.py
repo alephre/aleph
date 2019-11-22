@@ -1,8 +1,8 @@
 import os
 import shutil
-
-from tempfile import mkdtemp
 from io import BytesIO
+from tempfile import mkdtemp
+
 from aleph.models import Processor
 
 

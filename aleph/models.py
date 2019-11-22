@@ -13,21 +13,19 @@ The inheritance system works as the following:
 """
 
 import logging
-
+from abc import ABC
 from datetime import datetime
-from slugify import slugify
 
 from celery import Task
 from celery.utils.log import get_task_logger
-
-from abc import ABC
+from slugify import slugify
 
 from aleph.config import ConfigManager, settings
-from aleph.helpers.tasks import call_task
-from aleph.helpers.dates import to_es_date
-from aleph.helpers.datautils import encode_data
-from aleph.helpers.iocs import default_values as ioc_default_values
 from aleph.exceptions import PluginException, ProcessorRuntimeException
+from aleph.helpers.datautils import encode_data
+from aleph.helpers.dates import to_es_date
+from aleph.helpers.iocs import default_values as ioc_default_values
+from aleph.helpers.tasks import call_task
 
 
 class AlephTask(Task):

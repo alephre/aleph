@@ -1,21 +1,23 @@
-from celery.utils.log import get_task_logger
-from cachetools import cached, LRUCache
-
 from copy import deepcopy
 
-from aleph.config.constants import CACHE_LRU_SIZE
-from aleph.config.constants import COMPONENT_TYPE_ANALYZER, COMPONENT_TYPE_PROCESSOR
+from cachetools import LRUCache, cached
+from celery.utils.log import get_task_logger
+
 from aleph.config.constants import (
-    FIELD_SAMPLE_PROCESSOR_ITEMS,
+    CACHE_LRU_SIZE,
+    COMPONENT_TYPE_ANALYZER,
+    COMPONENT_TYPE_PROCESSOR,
     FIELD_SAMPLE_ANALYZER_ITEMS,
-    FIELD_SAMPLE_ID,
     FIELD_SAMPLE_DATA,
+    FIELD_SAMPLE_ID,
     FIELD_SAMPLE_IOCS,
+    FIELD_SAMPLE_PROCESSOR_ITEMS,
+    FIELD_TRACK_PLUGIN_COMPLETED,
+    FIELD_TRACK_TAGS,
 )
-from aleph.config.constants import FIELD_TRACK_TAGS, FIELD_TRACK_PLUGIN_COMPLETED
-from aleph.exceptions import ProcessorSetupException, ProcessorRuntimeException
+from aleph.exceptions import ProcessorRuntimeException, ProcessorSetupException
 from aleph.helpers.datautils import decode_data
-from aleph.helpers.loaders import load_processor, load_analyzer
+from aleph.helpers.loaders import load_analyzer, load_processor
 from aleph.helpers.tasks import call_task
 
 logger = get_task_logger(__name__)

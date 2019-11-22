@@ -1,12 +1,13 @@
 import lief
 
-from aleph.models import Processor
 from aleph.exceptions import ProcessorRuntimeException
+from aleph.models import Processor
 
 
 class ELF(Processor):
 
     binary = None
+    filetypes = ["application/x-elf"]
 
     def process(self, sample):
 

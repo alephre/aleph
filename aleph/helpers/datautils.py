@@ -1,10 +1,9 @@
 import math
+from base64 import b64decode, b64encode
+from collections import Counter
+from hashlib import sha256
 
 from celery.utils.log import get_task_logger
-
-from hashlib import sha256
-from base64 import b64encode, b64decode
-from collections import Counter
 
 logger = get_task_logger(__name__)
 

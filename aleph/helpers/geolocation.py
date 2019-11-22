@@ -1,13 +1,13 @@
 import os
-import geocoder
 
-from geoip2.database import Reader
+import geocoder
 from celery.utils.log import get_task_logger
+from geoip2.database import Reader
 
 from aleph.config.constants import (
-    GEOLOCATION_DATABASE_PATH,
     GEOLOCATION_DATABASE_ASN,
     GEOLOCATION_DATABASE_CITY,
+    GEOLOCATION_DATABASE_PATH,
 )
 
 logger = get_task_logger(__name__)

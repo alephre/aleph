@@ -1,5 +1,6 @@
-import re
 import email
+import re
+
 import chardet
 
 from aleph.models import Processor

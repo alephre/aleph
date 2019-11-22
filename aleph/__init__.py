@@ -7,19 +7,23 @@ worker is up and ready to go.
 """
 
 import logging
-import coloredlogs
 
+import coloredlogs
 from celery import Celery
 from celery.signals import (
-    setup_logging,
-    celeryd_init,
-    worker_ready,
     celeryd_after_setup,
+    celeryd_init,
+    setup_logging,
+    worker_ready,
 )
 
 from aleph.config import routes, settings
+from aleph.config.constants import (
+    ASCII_ART_ALEPH_LOGO,
+    CELERY_AUTODISCOVER_TASKS,
+    CELERY_IMPORTS,
+)
 from aleph.models import AlephTask
-from aleph.config.constants import CELERY_AUTODISCOVER_TASKS, ASCII_ART_ALEPH_LOGO
 
 LOGGER = logging.getLogger(__name__)
 
@@ -52,6 +56,7 @@ def create_app():
 
     celery.conf.update(
         {
+            "imports": CELERY_IMPORTS,
             "broker_url": settings.get("transport"),
             "result_backend": result_backend,
             "broker_transport_options": {"confirm_publish": True},
@@ -77,7 +82,7 @@ def create_app():
 
 
 @setup_logging.connect
-def setup_loggers():
+def setup_loggers(**kwargs):
     """
     Initialize aleph custom logging.
 
@@ -123,7 +128,7 @@ def setup_loggers():
 
 
 @celeryd_init.connect
-def init_app(sender):
+def init_app(sender=None, conf=None, **kwargs):
     """
     Initialize application.
 
@@ -144,7 +149,7 @@ def init_app(sender):
 
 
 @celeryd_after_setup.connect
-def after_setup():
+def after_setup(sender, instance, **kwargs):
     """
     Execute post-setup routines.
 
@@ -157,7 +162,7 @@ def after_setup():
 
 
 @worker_ready.connect
-def worker_ready():
+def worker_ready(**kwargs):
     """Execute routines after the worker is running and ready to accept jobs."""
     LOGGER.info("Aleph worker is online.")
 

@@ -1,9 +1,9 @@
 import re
 
-from aleph.exceptions import ProcessorRuntimeException
-from aleph.models import Processor
-from aleph.helpers.iocs import find_iocs
 from aleph.config.constants import FILETYPES_ARCHIVE, FILETYPES_META
+from aleph.exceptions import ProcessorRuntimeException
+from aleph.helpers.iocs import find_iocs
+from aleph.models import Processor
 
 # String parsing functions from https://gist.github.com/williballenthin/8e3913358a7996eab9b96bd57fc59df2
 
@@ -16,7 +16,7 @@ class Strings(Processor):
     filetypes_exclude = FILETYPES_ARCHIVE + FILETYPES_META + ["text/url"]
 
     default_options = {
-        "extract_meta_resources": True,
+        "extract_resources": True,
         "iocs_exclude": [
             "ssdeeps",
             "phone_numbers",
@@ -79,7 +79,7 @@ class Strings(Processor):
                         continue
                     self.add_ioc(ioc_type, ioc_values)
 
-                if self.options.get("extract_meta_resources"):
+                if self.options.get("extract_resources"):
                     self.extract_samples_from_iocs(iocs, sample["id"])
 
         except Exception as e:

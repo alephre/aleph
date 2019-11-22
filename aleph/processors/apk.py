@@ -1,8 +1,8 @@
 # -*- coding: utf8 -*-
 
-from aleph.models import Processor
-
 from androguard.core.bytecodes.apk import APK as agAPK
+
+from aleph.models import Processor
 
 
 class APK(Processor):

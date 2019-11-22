@@ -1,12 +1,12 @@
-import pefile
 import datetime
-
 from itertools import zip_longest
+
+import pefile
 from slugify import slugify
 
-from aleph.models import Processor
 from aleph.helpers.datautils import entropy
 from aleph.helpers.strings import normalize_name
+from aleph.models import Processor
 
 
 class PE(Processor):

@@ -1,8 +1,9 @@
-from validators import domain, email, url, ipv4, ipv6, mac_address
-from netaddr import IPNetwork, IPAddress
-from ipaddress import ip_address, IPv4Address, IPv6Address
-from tld import get_tld
+from ipaddress import IPv4Address, IPv6Address, ip_address
 from urllib.parse import urlparse
+
+from netaddr import IPAddress, IPNetwork
+from tld import get_tld
+from validators import domain, email, ipv4, ipv6, mac_address, url
 
 
 def validate_domain(domain_str, domain_min_length=2):

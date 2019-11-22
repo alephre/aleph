@@ -4,8 +4,8 @@
 # POP3 SSL email collector
 ##
 # import email
-import uuid
 import poplib
+import uuid
 
 from aleph.models import Collector
 

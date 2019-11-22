@@ -1,7 +1,7 @@
 import json
 
-from aleph.models import Processor
 from aleph.helpers.geolocation import get_location_for_address
+from aleph.models import Processor
 
 
 class Location(Processor):

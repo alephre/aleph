@@ -6,14 +6,23 @@ is to never have raw numbers or strings in the code in favor to well described
 constants which can be centrally updated.
 """
 
-CELERY_AUTODISCOVER_TASKS = [
+CELERY_IMPORTS = (
+    "aleph.tasks",
+    "aleph.collectors.tasks",
+    "aleph.processors.tasks",
+    "aleph.analyzers.tasks",
+    "aleph.datastores.tasks",
+    "aleph.storages.tasks",
+)
+
+CELERY_AUTODISCOVER_TASKS = (
     "aleph",
     "aleph.collectors",
     "aleph.processors",
     "aleph.analyzers",
     "aleph.datastores",
     "aleph.storages",
-]
+)
 
 FILETYPES_META = ["meta/domain", "meta/url", "meta/host", "meta/location"]
 

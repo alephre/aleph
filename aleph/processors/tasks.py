@@ -1,6 +1,6 @@
 from aleph import app
-from aleph.helpers.plugins import run_plugin
 from aleph.exceptions import BaseException
+from aleph.helpers.plugins import run_plugin
 
 
 @app.task(bind=True)

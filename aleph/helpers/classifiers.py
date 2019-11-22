@@ -1,10 +1,9 @@
-import yara
 import magic
-
+import yara
 from celery.utils.log import get_task_logger
 
-from aleph.models import Classifier
 from aleph.config.constants import CLASSIFIER_YARA_DEFAULT_RULES
+from aleph.models import Classifier
 
 logger = get_task_logger(__name__)
 

@@ -1,14 +1,12 @@
-from time import sleep
 from operator import itemgetter
+from time import sleep
 
-from virus_total_apis import PublicApi
-from virus_total_apis import PrivateApi
+from virus_total_apis import PrivateApi, PublicApi
 
-
-from aleph.models import Processor
+from aleph.config.constants import FILETYPES_ARCHIVE
 from aleph.helpers.datautils import hash_data
 from aleph.helpers.strings import in_string
-from aleph.config.constants import FILETYPES_ARCHIVE
+from aleph.models import Processor
 
 VT_RESPONSE_OK = 200
 VT_SCAN_OK = 1

@@ -1,7 +1,7 @@
-import sys
-import inspect
 import importlib
+import inspect
 import pkgutil
+import sys
 
 
 def load_component(component_name, package_name):

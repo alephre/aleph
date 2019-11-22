@@ -1,5 +1,6 @@
-import hashlib
 import binascii
+import hashlib
+
 import ssdeep
 
 from aleph.models import Processor

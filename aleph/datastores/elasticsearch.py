@@ -3,26 +3,26 @@ import socket
 
 from elasticsearch import Elasticsearch as ES
 from elasticsearch.exceptions import ConflictError, ConnectionTimeout
-from urllib3.exceptions import ReadTimeoutError, ProtocolError
 from slugify import slugify
+from urllib3.exceptions import ProtocolError, ReadTimeoutError
 
 from aleph.config.constants import (
-    FIELD_SAMPLE_PROCESSOR_ITEMS,
     FIELD_SAMPLE_ANALYZER_ITEMS,
-    FIELD_SAMPLE_SIZE,
     FIELD_SAMPLE_FILETYPE,
     FIELD_SAMPLE_FILETYPE_DESC,
-    FIELD_SAMPLE_TIMESTAMP,
     FIELD_SAMPLE_IOCS,
+    FIELD_SAMPLE_PROCESSOR_ITEMS,
+    FIELD_SAMPLE_SIZE,
+    FIELD_SAMPLE_TIMESTAMP,
 )
 from aleph.exceptions import (
-    DatastoreTemporaryException,
+    DatastoreRetrieveException,
     DatastoreSearchException,
     DatastoreStoreException,
-    DatastoreRetrieveException,
+    DatastoreTemporaryException,
 )
-from aleph.models import Datastore
 from aleph.helpers.iocs import default_values as ioc_default_values
+from aleph.models import Datastore
 
 MAX_SCRIPT_LEN = 10000
 

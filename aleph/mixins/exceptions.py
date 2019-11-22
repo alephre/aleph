@@ -1,7 +1,7 @@
+import linecache
 import os
 import sys
 import traceback
-import linecache
 from collections import namedtuple
 
 # Mixins from https://github.com/mahmoud/boltons/blob/master/boltons/excutils.py

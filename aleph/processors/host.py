@@ -1,9 +1,8 @@
 import json
+from ipaddress import IPv6Address, ip_address
 
-from ipaddress import ip_address, IPv6Address
-
+from aleph.helpers.geolocation import get_asn_for_ip, get_location_for_ip
 from aleph.models import Processor
-from aleph.helpers.geolocation import get_location_for_ip, get_asn_for_ip
 
 
 class Host(Processor):

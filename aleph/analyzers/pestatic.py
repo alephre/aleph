@@ -1,30 +1,30 @@
 import re
 
-from aleph.models import Analyzer
 from aleph.helpers.mitre_attack import (
-    MA_DATA_ENCRYPTED,
+    MA_ACCESS_TOKEN_MANIP,
+    MA_AUDIO_CAPTURE,
     MA_DATA_COMPRESSED,
-    MA_SOFTWARE_PACKING,
-    MA_SECURITY_SOFTWARE_DISCOVERY,
-    MA_PROCESS_INJECTION,
-    MA_PROCESS_HOLLOWING,
-    MA_EXTRA_WINDOW_MEMORY_INJECTION,
-    MA_PROCESS_DOPPELGANGING,
-    MA_HOOKING,
-    MA_EXFIL_NETWORK,
-    MA_REG_QUERY,
+    MA_DATA_ENCRYPTED,
     MA_EXECUTION_API,
-    MA_PROCESS_DISCOVERY,
-    MA_SYSTEM_SERVICE_DISCOVERY,
+    MA_EXFIL_NETWORK,
+    MA_EXTRA_WINDOW_MEMORY_INJECTION,
+    MA_FILE_PERMISSIONS_MODIFY,
+    MA_HOOKING,
+    MA_INDICATOR_REMOVAL_HOST,
     MA_MODIFY_EXISTING_SERVICE,
     MA_NEW_SERVICE,
-    MA_ACCESS_TOKEN_MANIP,
-    MA_FILE_PERMISSIONS_MODIFY,
-    MA_SYSTEM_INFO_DISCOVERY,
-    MA_INDICATOR_REMOVAL_HOST,
+    MA_PROCESS_DISCOVERY,
+    MA_PROCESS_DOPPELGANGING,
+    MA_PROCESS_HOLLOWING,
+    MA_PROCESS_INJECTION,
+    MA_REG_QUERY,
     MA_SCREEN_CAPTURE,
-    MA_AUDIO_CAPTURE,
+    MA_SECURITY_SOFTWARE_DISCOVERY,
+    MA_SOFTWARE_PACKING,
+    MA_SYSTEM_INFO_DISCOVERY,
+    MA_SYSTEM_SERVICE_DISCOVERY,
 )
+from aleph.models import Analyzer
 
 IMPORT_MIN_MATCHES = 2
 EVIL_RES_SIZE_RATIO = 0.75
@@ -35,7 +35,6 @@ RICH_COMPTYPE_TOTAL_IMPORTS = 0x001
 
 class PEStatic(Analyzer):
 
-    name = "pe_static_analyzer"
     filetypes = ["application/x-dosexec"]
 
     # Mostly taken from <https://github.com/JusticeRage/Manalyze/blob/master/plugins/plugin_imports.cpp>
@@ -508,7 +507,7 @@ class PEStatic(Analyzer):
 
     def analyze(self):
 
-        if "pe_info" not in self.artifacts.keys():
+        if "pe" not in self.artifacts.keys():
             self.logger.warn(
                 "PE Info artifacts not found on sample %s" % self.sample["id"]
             )
@@ -553,10 +552,10 @@ class PEStatic(Analyzer):
 
     def check_section_entropy(self):
 
-        if "sections" not in self.artifacts["pe_info"]:
+        if "sections" not in self.artifacts["pe"]:
             return False
 
-        for s in self.artifacts["pe_info"]["sections"]:
+        for s in self.artifacts["pe"]["sections"]:
             if s["entropy"] >= EVIL_ENTROPY_THRESHOLD:
                 self.add_indicator("%s_section_evil_entropy" % s["name"])
                 self.add_flag(
@@ -571,12 +570,12 @@ class PEStatic(Analyzer):
     def check_resources(self):
 
         # Check resource entropy & size
-        if "resources" not in self.artifacts["pe_info"]:
+        if "resources" not in self.artifacts["pe"]:
             return False
 
         total_resource_size = 0
 
-        for r in self.artifacts["pe_info"]["resources"]:
+        for r in self.artifacts["pe"]["resources"]:
 
             total_resource_size += r["size"]
 
@@ -633,13 +632,13 @@ class PEStatic(Analyzer):
 
     def check_known_packers(self):
 
-        if "sections" not in self.artifacts["pe_info"]:
+        if "sections" not in self.artifacts["pe"]:
             return False
 
         has_packer = False
 
         for check in self.known_packer_sections:
-            for section in self.artifacts["pe_info"]["sections"]:
+            for section in self.artifacts["pe"]["sections"]:
                 if re.match(check["rule"], section["name"]):
                     has_packer = True
                     self.add_flag(
@@ -655,13 +654,13 @@ class PEStatic(Analyzer):
 
     def check_evil_imports(self):
 
-        if "imports" not in self.artifacts["pe_info"]:
+        if "imports" not in self.artifacts["pe"]:
             return False
 
         import_list = []
 
         # Grab all import names from PE
-        for import_entry in self.artifacts["pe_info"]["imports"]:
+        for import_entry in self.artifacts["pe"]["imports"]:
             if "imports" not in import_entry:
                 self.logger.warn(
                     "Import list for dll %s is missing" % import_entry["name"]
@@ -695,8 +694,8 @@ class PEStatic(Analyzer):
                 )
 
         # Check if total imports match RICH Header's 'Total Imports'
-        if "rich_header" in self.artifacts["pe_info"]:
-            for comp in self.artifacts["pe_info"]["rich_header"]["compids"]:
+        if "rich_header" in self.artifacts["pe"]:
+            for comp in self.artifacts["pe"]["rich_header"]["compids"]:
                 if comp["type_id"] == RICH_COMPTYPE_TOTAL_IMPORTS:
                     if int(comp["count"]) != len(import_list):
                         self.add_indicator("rich_import_mismatch")

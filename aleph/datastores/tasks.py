@@ -1,7 +1,7 @@
 from aleph import app
 from aleph.config import settings
+from aleph.exceptions import BaseException, DatastoreTemporaryException
 from aleph.helpers.loaders import load_datastore
-from aleph.exceptions import DatastoreTemporaryException, BaseException
 
 DATASTORES = [
     (name, load_datastore(name)(options))

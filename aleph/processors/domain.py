@@ -1,11 +1,11 @@
-from whois import whois
-from tld import get_tld
-from dns.resolver import Resolver, NoAnswer, NoNameservers, NXDOMAIN
 from dns.exception import Timeout
+from dns.resolver import NXDOMAIN, NoAnswer, NoNameservers, Resolver
 from netaddr.core import AddrFormatError
+from tld import get_tld
+from whois import whois
 
-from aleph.models import Processor
 from aleph.helpers.validators import validate_domain, validate_ip
+from aleph.models import Processor
 
 
 class Domain(Processor):

@@ -1,36 +1,37 @@
 from copy import deepcopy
+
 from ioc_finder import find_iocs as if_find_iocs
 from iocextract import (
-    extract_urls,
+    extract_custom_iocs,
+    extract_emails,
     extract_ipv4s,
     extract_ipv6s,
-    extract_emails,
     extract_md5_hashes,
     extract_sha1_hashes,
     extract_sha256_hashes,
     extract_sha512_hashes,
-    extract_custom_iocs,
+    extract_urls,
 )
 
-from aleph.helpers.validators import (
-    validate_domain,
-    validate_ip,
-    validate_url,
-    validate_email,
-    validate_mac_address,
-)
 from aleph.helpers.regexes import (
     CRYPTO_WALLET_BITCOIN,
     CRYPTO_WALLET_BITCOIN_CASH,
+    CRYPTO_WALLET_DASH,
+    CRYPTO_WALLET_DOGECOIN,
     CRYPTO_WALLET_ETHEREUM,
     CRYPTO_WALLET_LITECOIN,
-    CRYPTO_WALLET_DOGECOIN,
-    CRYPTO_WALLET_DASH,
     CRYPTO_WALLET_MONERO,
     CRYPTO_WALLET_NEO,
     CRYPTO_WALLET_RIPPLE,
     TOR_ONION_V2_ADDR,
     TOR_ONION_V3_ADDR,
+)
+from aleph.helpers.validators import (
+    validate_domain,
+    validate_email,
+    validate_ip,
+    validate_mac_address,
+    validate_url,
 )
 
 validators = {
