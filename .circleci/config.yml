@@ -47,10 +47,6 @@ jobs:
           command: dockerize -wait tcp://localhost:9200 -timeout 1m
 
       - run:
-          name: Set flake8 configuration
-          command: cp .flake8.development .flake8
-
-      - run:
           name: Run Tox
           command: tox
 
