@@ -1,6 +1,6 @@
 # -*- coding: utf8 -*-
 
-from androguard.core.bytecodes.apk import APK as agAPK
+from androguard.core.bytecodes.apk import APK as AG_APK
 
 from aleph.models import Processor
 
@@ -20,7 +20,7 @@ class APK(Processor):
     def parse_apk(self, data):
 
         try:
-            apk = agAPK(data, raw=True)
+            apk = AG_APK(data, raw=True)
             if apk.is_valid_APK():
                 return apk
             else:
