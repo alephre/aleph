@@ -65,7 +65,7 @@ py==1.8.0
 pycparser==2.19
 pycryptodome==3.7.3
 pydot==1.4.1
-Pygments==2.3.1
+Pygments==2.7.4
 pyparsing==2.3.1
 python-dateutil==2.7.5
 python-magic==0.4.15
