@@ -41,7 +41,7 @@ jedi==0.13.2
 jmespath==0.9.3
 kiwisolver==1.0.1
 kombu==4.5.0
-lief==0.9.0
+lief==0.12.2
 lxml==4.3.0
 matplotlib==3.0.2
 maxminddb==1.4.1
